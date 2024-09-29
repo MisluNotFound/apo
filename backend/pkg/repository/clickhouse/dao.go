@@ -60,7 +60,7 @@ type Repo interface {
 
 	//config
 	ModifyTableTTL(ctx context.Context, mapResult []model.ModifyTableTTLMap) error
-	GetTables(blackTableNames []string, whiteTableNames []string) ([]model.TablesQuery, error)
+	GetTables(tables []string) ([]model.TablesQuery, error)
 
 	// ========== alert events ==========
 	// 查询按group和级别采样的告警事件,sampleCount为每个group和级别采样的数量
@@ -76,8 +76,8 @@ type Repo interface {
 }
 
 type chRepo struct {
-	conn driver.Conn
-
+	conn     driver.Conn
+	database string
 	AvailableFilters
 }
 
@@ -110,6 +110,7 @@ func New(logger *zap.Logger, address []string, database string, username string,
 	// Debug 日志等级时使用包装的Conn，输出执行SQL的耗时
 	if logger.Level() == zap.DebugLevel {
 		repo = &chRepo{
+			database: database,
 			conn: &WrappedConn{
 				Conn:   conn,
 				logger: logger,
@@ -117,7 +118,8 @@ func New(logger *zap.Logger, address []string, database string, username string,
 		}
 	} else {
 		repo = &chRepo{
-			conn: conn,
+			database: database,
+			conn:     conn,
 		}
 	}
 

@@ -142,19 +142,23 @@ func (n *NoneAPI) SyncNow() error {
 	return ErrKubernetesRepoNotReady
 }
 
-func (n *NoneAPI) GetAlertRules(configFile string, filter *request.AlertRuleFilter, pageParam *request.PageParam) ([]*request.AlertRule, int) {
+func (n *NoneAPI) GetAlertRules(configFile string, filter *request.AlertRuleFilter, pageParam *request.PageParam, syncNow bool) ([]*request.AlertRule, int) {
 	return []*request.AlertRule{}, 0
 }
 
-func (n *NoneAPI) AddOrUpdateAlertRule(configFile string, alertRule request.AlertRule) error {
+func (n *NoneAPI) UpdateAlertRule(configFile string, alertRule request.AlertRule, oldGroup, oldAlert string) error {
 	return ErrKubernetesRepoNotReady
 }
 
-func (n *NoneAPI) DeleteAlertRule(configFile string, group string, alert string) error {
+func (n *NoneAPI) AddAlertRule(configFile string, alertRule request.AlertRule) error {
 	return ErrKubernetesRepoNotReady
 }
 
 // GetAlertRules implements Repo.
+
+func (n *NoneAPI) DeleteAlertRule(configFile string, group string, alert string) error {
+	return ErrKubernetesRepoNotReady
+}
 
 // GetAlertRuleConfigFile implements Repo.
 func (n *NoneAPI) GetAlertRuleConfigFile(alertRuleFile string) (map[string]string, error) {
@@ -166,8 +170,12 @@ func (n *NoneAPI) UpdateAlertRuleConfigFile(configFile string, content []byte) e
 	return ErrKubernetesRepoNotReady
 }
 
-// AddOrUpdateAMConfigReceiver implements Repo.
-func (n *NoneAPI) AddOrUpdateAMConfigReceiver(configFile string, receiver amconfig.Receiver) error {
+func (n *NoneAPI) AddAMConfigReceiver(configFile string, receiver amconfig.Receiver) error {
+	return ErrKubernetesRepoNotReady
+}
+
+// UpdateAMConfigReceiver implements Repo.
+func (n *NoneAPI) UpdateAMConfigReceiver(configFile string, receiver amconfig.Receiver, oldName string) error {
 	return ErrKubernetesRepoNotReady
 }
 
@@ -177,6 +185,10 @@ func (n *NoneAPI) DeleteAMConfigReceiver(configFile string, name string) error {
 }
 
 // GetAMConfigReceiver implements Repo.
-func (n *NoneAPI) GetAMConfigReceiver(configFile string, filter *request.AMConfigReceiverFilter, pageParam *request.PageParam) ([]amconfig.Receiver, int) {
+func (n *NoneAPI) GetAMConfigReceiver(configFile string, filter *request.AMConfigReceiverFilter, pageParam *request.PageParam, syncNow bool) ([]amconfig.Receiver, int) {
 	return []amconfig.Receiver{}, 0
+}
+
+func (n *NoneAPI) CheckAlertRule(configFile, group, alert string) (bool, error) {
+	return false, ErrKubernetesRepoNotReady
 }

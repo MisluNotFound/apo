@@ -16,6 +16,7 @@
 package amconfig
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/textproto"
 	"regexp"
@@ -182,7 +183,7 @@ type NotifierConfig struct {
 }
 
 func (nc *NotifierConfig) SendResolved() bool {
-	return nc.VSendResolved
+	return bool(nc.VSendResolved)
 }
 
 // WebexConfig configures notifications via Webex.
@@ -287,6 +288,15 @@ func (c *EmailConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	c.Headers = normalizedHeaders
 
+	return nil
+}
+
+func (c *EmailConfig) UnmarshalJSON(data []byte) error {
+	*c = DefaultEmailConfig
+	type plain EmailConfig
+	if err := json.Unmarshal(data, (*plain)(c)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -517,6 +527,15 @@ func (c *WebhookConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	if c.URL != nil && c.URLFile != "" {
 		return fmt.Errorf("at most one of url & url_file must be configured")
+	}
+	return nil
+}
+
+func (c *WebhookConfig) UnmarshalJSON(data []byte) error {
+	*c = DefaultWebhookConfig
+	type plain WebhookConfig
+	if err := json.Unmarshal(data, (*plain)(c)); err != nil {
+		return err
 	}
 	return nil
 }

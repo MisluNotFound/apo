@@ -13,7 +13,7 @@ func (s *service) GetAMConfigReceivers(req *request.GetAlertManagerConfigRecever
 			PageSize:    999,
 		}
 	}
-	receivers, totalCount := s.k8sApi.GetAMConfigReceiver(req.AMConfigFile, req.AMConfigReceiverFilter, req.PageParam)
+	receivers, totalCount := s.k8sApi.GetAMConfigReceiver(req.AMConfigFile, req.AMConfigReceiverFilter, req.PageParam, req.RefreshCache)
 	return response.GetAlertManagerConfigReceiverResponse{
 		AMConfigReceivers: receivers,
 		Pagination: &model.Pagination{
@@ -24,8 +24,12 @@ func (s *service) GetAMConfigReceivers(req *request.GetAlertManagerConfigRecever
 	}
 }
 
+func (s *service) AddAMConfigReceiver(req *request.AddAlertManagerConfigReceiver) error {
+	return s.k8sApi.AddAMConfigReceiver(req.AMConfigFile, req.AMConfigReceiver)
+}
+
 func (s *service) UpdateAMConfigReceiver(req *request.UpdateAlertManagerConfigReceiver) error {
-	return s.k8sApi.AddOrUpdateAMConfigReceiver(req.AMConfigFile, req.AMConfigReceiver)
+	return s.k8sApi.UpdateAMConfigReceiver(req.AMConfigFile, req.AMConfigReceiver, req.OldName)
 }
 
 func (s *service) DeleteAMConfigReceiver(req *request.DeleteAlertManagerConfigReceiverRequest) error {

@@ -61,7 +61,7 @@ const docTemplate = `{
             "delete": {
                 "description": "删除告警通知对象",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -72,21 +72,58 @@ const docTemplate = `{
                 "summary": "删除告警通知对象",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "告警通知配置文件名",
-                        "name": "amConfigFile",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "告警通知配置名称",
-                        "name": "name",
-                        "in": "query"
+                        "description": "删除对象",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DeleteAlertManagerConfigReceiverRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/alertmanager/receiver/add": {
+            "post": {
+                "description": "新增告警通知对象",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "新增告警通知对象",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddAlertManagerConfigReceiver"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
                         "schema": {
                             "type": "string"
                         }
@@ -233,22 +270,13 @@ const docTemplate = `{
                 "summary": "删除告警规则",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "告警规则文件名",
-                        "name": "alertRuleFile",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "告警规则组",
-                        "name": "group",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "告警规则名",
-                        "name": "alert",
-                        "in": "query"
+                        "description": "删除对象",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DeleteAlertRuleRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -256,6 +284,94 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/rule/add": {
+            "post": {
+                "description": "新增告警规则",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "新增告警规则",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddAlertRuleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/rule/available": {
+            "get": {
+                "description": "检查告警规则名是否可用",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "检查告警规则名是否可用",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "查询告警规则文件名",
+                        "name": "alertRuleFile",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "组名",
+                        "name": "group",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "告警规则名",
+                        "name": "alert",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CheckAlertRuleResponse"
                         }
                     },
                     "400": {
@@ -3652,6 +3768,31 @@ const docTemplate = `{
                 }
             }
         },
+        "request.AddAlertManagerConfigReceiver": {
+            "type": "object",
+            "properties": {
+                "amConfigFile": {
+                    "type": "string"
+                },
+                "amConfigReceiver": {
+                    "$ref": "#/definitions/amconfig.Receiver"
+                },
+                "oldName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.AddAlertRuleRequest": {
+            "type": "object",
+            "properties": {
+                "alertRule": {
+                    "$ref": "#/definitions/request.AlertRule"
+                },
+                "alertRuleFile": {
+                    "type": "string"
+                }
+            }
+        },
         "request.Alert": {
             "type": "object",
             "properties": {
@@ -3687,6 +3828,7 @@ const docTemplate = `{
         "request.AlertRule": {
             "type": "object",
             "required": [
+                "alert",
                 "group"
             ],
             "properties": {
@@ -3739,6 +3881,38 @@ const docTemplate = `{
                 "BoolColumn"
             ]
         },
+        "request.DeleteAlertManagerConfigReceiverRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "amConfigFile": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.DeleteAlertRuleRequest": {
+            "type": "object",
+            "required": [
+                "alert",
+                "group"
+            ],
+            "properties": {
+                "alert": {
+                    "type": "string"
+                },
+                "alertRuleFile": {
+                    "type": "string"
+                },
+                "group": {
+                    "type": "string"
+                }
+            }
+        },
         "request.GetAlertManagerConfigReceverRequest": {
             "type": "object",
             "properties": {
@@ -3756,6 +3930,9 @@ const docTemplate = `{
                 },
                 "rType": {
                     "type": "string"
+                },
+                "refreshCache": {
+                    "type": "boolean"
                 }
             }
         },
@@ -3779,6 +3956,9 @@ const docTemplate = `{
                 },
                 "pageSize": {
                     "type": "integer"
+                },
+                "refreshCache": {
+                    "type": "boolean"
                 },
                 "severity": {
                     "description": "告警级别 info warning ...",
@@ -4112,17 +4292,38 @@ const docTemplate = `{
                 },
                 "amConfigReceiver": {
                     "$ref": "#/definitions/amconfig.Receiver"
+                },
+                "oldName": {
+                    "type": "string"
                 }
             }
         },
         "request.UpdateAlertRuleRequest": {
             "type": "object",
+            "required": [
+                "oldAlert",
+                "oldGroup"
+            ],
             "properties": {
                 "alertRule": {
                     "$ref": "#/definitions/request.AlertRule"
                 },
                 "alertRuleFile": {
                     "type": "string"
+                },
+                "oldAlert": {
+                    "type": "string"
+                },
+                "oldGroup": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.CheckAlertRuleResponse": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "boolean"
                 }
             }
         },
@@ -4830,6 +5031,9 @@ const docTemplate = `{
                 },
                 "netStatus": {
                     "description": "网络告警",
+                    "type": "string"
+                },
+                "nodeIP": {
                     "type": "string"
                 },
                 "nodeName": {

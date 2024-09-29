@@ -43,6 +43,7 @@ type Config struct {
 		Username string `mapstructure:"username"`
 		Password string `mapstructure:"password"`
 		Database string `mapstructure:"database"`
+		Cluster  string `mapstructure:"cluster"`
 	} `mapstructure:"clickhouse"`
 	Promethues struct {
 		Address string `mapstructure:"address"`
@@ -68,8 +69,8 @@ type MetadataSettings struct {
 	AlertRuleCMName   string `mapstructure:"alert_rule_configmap_name"`
 	AlertRuleFileName string `mapstructure:"alert_rule_file_name"`
 
-	AlertManagerCMName   string `mapstructure:"alert_manager_confignap"`
-	AlertManagerFileName string `mapstructure:"alert_file_name"`
+	AlertManagerCMName   string `mapstructure:"alert_manager_configmap"`
+	AlertManagerFileName string `mapstructure:"alert_manager_file_name"`
 }
 
 func Get() *Config {

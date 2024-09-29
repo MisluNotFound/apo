@@ -2,12 +2,12 @@ package alerts
 
 import (
 	"errors"
+	"github.com/CloudDetail/apo/backend/pkg/model"
 	"net/http"
 
 	"github.com/CloudDetail/apo/backend/pkg/code"
 	"github.com/CloudDetail/apo/backend/pkg/core"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
-	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 )
 
 // UpdateAlertRule 更新告警规则
@@ -34,12 +34,12 @@ func (h *handler) UpdateAlertRule() core.HandlerFunc {
 
 		err := h.alertService.UpdateAlertRule(req)
 		if err != nil {
-			var vErr kubernetes.ErrAlertRuleValidate
+			var vErr model.ErrWithMessage
 			if errors.As(err, &vErr) {
 				c.AbortWithError(core.Error(
 					http.StatusBadRequest,
-					code.UpdateAlertRuleValidateError,
-					code.Text(code.UpdateAlertRuleValidateError)).WithError(err),
+					vErr.Code,
+					code.Text(vErr.Code)).WithError(err),
 				)
 			} else {
 				c.AbortWithError(core.Error(

@@ -584,6 +584,22 @@ definitions:
         description: 值
         type: number
     type: object
+  request.AddAlertManagerConfigReceiver:
+    properties:
+      amConfigFile:
+        type: string
+      amConfigReceiver:
+        $ref: '#/definitions/amconfig.Receiver'
+      oldName:
+        type: string
+    type: object
+  request.AddAlertRuleRequest:
+    properties:
+      alertRule:
+        $ref: '#/definitions/request.AlertRule'
+      alertRuleFile:
+        type: string
+    type: object
   request.Alert:
     properties:
       annotations:
@@ -628,6 +644,7 @@ definitions:
       record:
         type: string
     required:
+    - alert
     - group
     type: object
   request.DataType:
@@ -644,6 +661,27 @@ definitions:
     - U64Column
     - StringColumn
     - BoolColumn
+  request.DeleteAlertManagerConfigReceiverRequest:
+    properties:
+      amConfigFile:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  request.DeleteAlertRuleRequest:
+    properties:
+      alert:
+        type: string
+      alertRuleFile:
+        type: string
+      group:
+        type: string
+    required:
+    - alert
+    - group
+    type: object
   request.GetAlertManagerConfigReceverRequest:
     properties:
       amConfigFile:
@@ -656,6 +694,8 @@ definitions:
         type: integer
       rType:
         type: string
+      refreshCache:
+        type: boolean
     type: object
   request.GetAlertRuleRequest:
     properties:
@@ -671,6 +711,8 @@ definitions:
         type: string
       pageSize:
         type: integer
+      refreshCache:
+        type: boolean
       severity:
         description: 告警级别 info warning ...
         items:
@@ -911,6 +953,8 @@ definitions:
         type: string
       amConfigReceiver:
         $ref: '#/definitions/amconfig.Receiver'
+      oldName:
+        type: string
     type: object
   request.UpdateAlertRuleRequest:
     properties:
@@ -918,6 +962,18 @@ definitions:
         $ref: '#/definitions/request.AlertRule'
       alertRuleFile:
         type: string
+      oldAlert:
+        type: string
+      oldGroup:
+        type: string
+    required:
+    - oldAlert
+    - oldGroup
+    type: object
+  response.CheckAlertRuleResponse:
+    properties:
+      available:
+        type: boolean
     type: object
   response.CreateResponse:
     properties:
@@ -1397,6 +1453,8 @@ definitions:
       netStatus:
         description: 网络告警
         type: string
+      nodeIP:
+        type: string
       nodeName:
         type: string
       timestamp:
@@ -1635,17 +1693,15 @@ paths:
   /api/alerts/alertmanager/receiver:
     delete:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: 删除告警通知对象
       parameters:
-      - description: 告警通知配置文件名
-        in: query
-        name: amConfigFile
-        type: string
-      - description: 告警通知配置名称
-        in: query
-        name: name
-        type: string
+      - description: 删除对象
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteAlertManagerConfigReceiverRequest'
       produces:
       - application/json
       responses:
@@ -1683,6 +1739,32 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 更新告警通知对象
+      tags:
+      - API.alerts
+  /api/alerts/alertmanager/receiver/add:
+    post:
+      consumes:
+      - application/json
+      description: 新增告警通知对象
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddAlertManagerConfigReceiver'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 新增告警通知对象
       tags:
       - API.alerts
   /api/alerts/alertmanager/receiver/list:
@@ -1743,18 +1825,12 @@ paths:
       - application/x-www-form-urlencoded
       description: 删除告警规则
       parameters:
-      - description: 告警规则文件名
-        in: query
-        name: alertRuleFile
-        type: string
-      - description: 告警规则组
-        in: query
-        name: group
-        type: string
-      - description: 告警规则名
-        in: query
-        name: alert
-        type: string
+      - description: 删除对象
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteAlertRuleRequest'
       produces:
       - application/json
       responses:
@@ -1792,6 +1868,64 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 更新告警规则
+      tags:
+      - API.alerts
+  /api/alerts/rule/add:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 新增告警规则
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddAlertRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 新增告警规则
+      tags:
+      - API.alerts
+  /api/alerts/rule/available:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 检查告警规则名是否可用
+      parameters:
+      - description: 查询告警规则文件名
+        in: query
+        name: alertRuleFile
+        type: string
+      - description: 组名
+        in: query
+        name: group
+        required: true
+        type: string
+      - description: 告警规则名
+        in: query
+        name: alert
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CheckAlertRuleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 检查告警规则名是否可用
       tags:
       - API.alerts
   /api/alerts/rule/groups:

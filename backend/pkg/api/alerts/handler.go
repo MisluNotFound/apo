@@ -45,6 +45,11 @@ type Handler interface {
 	// @Router /api/alerts/alertmanager/receiver/list [post]
 	GetAlertManagerConfigReceiver() core.HandlerFunc
 
+	// AddAlertManagerConfigReceiver 新增告警通知对象
+	// @Tags API.alerts
+	// @Router /api/alerts/alertmanager/receiver/add [post]
+	AddAlertManagerConfigReceiver() core.HandlerFunc
+
 	// UpdateAlertManagerConfigReceiver 更新告警通知对象
 	// @Tags API.alerts
 	// @Router /api/alerts/alertmanager/receiver [post]
@@ -63,6 +68,16 @@ type Handler interface {
 	// @Tags API.alerts
 	// @Router /api/alerts/rule/metrics [get]
 	GetMetricPQL() core.HandlerFunc
+
+	// AddAlertRule 新增告警规则
+	// @Tags API.alerts
+	// @Router /api/alerts/rule/add [post]
+	AddAlertRule() core.HandlerFunc
+
+	// CheckAlertRule 检查告警规则名是否可用
+	// @Tags API.alerts
+	// @Router /api/alerts/rule/available/file/group/alert [get]
+	CheckAlertRule() core.HandlerFunc
 }
 
 type handler struct {

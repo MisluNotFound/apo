@@ -1,12 +1,13 @@
 package kubernetes
 
 import (
-	"fmt"
-
+	"github.com/CloudDetail/apo/backend/pkg/code"
+	errmodel "github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/hashicorp/go-multierror"
 	"github.com/prometheus/common/model"
 	promfmt "github.com/prometheus/prometheus/model/rulefmt"
+	"go.uber.org/zap"
 )
 
 func (k *k8sApi) syncAlertRule() error {
@@ -24,32 +25,60 @@ func (k *k8sApi) syncAlertRule() error {
 	return nil
 }
 
-func (k *k8sApi) GetAlertRules(configFile string, filter *request.AlertRuleFilter, pageParam *request.PageParam) ([]*request.AlertRule, int) {
+func (k *k8sApi) GetAlertRules(configFile string, filter *request.AlertRuleFilter, pageParam *request.PageParam, syncNow bool) ([]*request.AlertRule, int) {
 	if len(configFile) == 0 {
 		configFile = k.MetadataSettings.AlertRuleFileName
+	}
+
+	if syncNow {
+		err := k.syncAlertRule()
+		if err != nil {
+			k.logger.Error("failed to sync alertRule with k8sAPI", zap.Error(err))
+		}
 	}
 	return k.Metadata.GetAlertRules(configFile, filter, pageParam)
 }
 
-type ErrAlertRuleValidate struct {
-	err error
+func (k *k8sApi) AddAlertRule(configFile string, alertRules request.AlertRule) error {
+	if len(configFile) == 0 {
+		configFile = k.MetadataSettings.AlertRuleFileName
+	}
+
+	if err := ValidateAlertRule(alertRules); err != nil {
+		return err
+	}
+
+	if err := k.Metadata.AddAlertRule(configFile, alertRules); err != nil {
+		return err
+	}
+
+	content, err := k.Metadata.AlertRuleMarshalToYaml(configFile)
+	if err != nil {
+		return err
+	}
+
+	return k.UpdateAlertRuleConfigFile(configFile, content)
 }
 
-func (e ErrAlertRuleValidate) Error() string {
-	return e.err.Error()
+func (k *k8sApi) CheckAlertRule(configFile, group, alert string) (bool, error) {
+	if len(configFile) == 0 {
+		configFile = k.MetadataSettings.AlertRuleFileName
+	}
+
+	return k.Metadata.CheckAlertRuleExists(configFile, group, alert)
 }
 
-func (k *k8sApi) AddOrUpdateAlertRule(configFile string, alertRule request.AlertRule) error {
+func (k *k8sApi) UpdateAlertRule(configFile string, alertRule request.AlertRule, oldGroup, oldAlert string) error {
 	if len(configFile) == 0 {
 		configFile = k.MetadataSettings.AlertRuleFileName
 	}
 
 	err := ValidateAlertRule(alertRule)
 	if err != nil {
-		return ErrAlertRuleValidate{err: err}
+		return err
 	}
 
-	err = k.Metadata.AddorUpdateAlertRule(configFile, alertRule)
+	err = k.Metadata.UpdateAlertRule(configFile, alertRule, oldGroup, oldAlert)
 	if err != nil {
 		return err
 	}
@@ -88,19 +117,23 @@ func (k *k8sApi) UpdateAlertRuleConfigFile(configFile string, content []byte) er
 }
 
 func ValidateAlertRule(rule request.AlertRule) error {
-	var err error
-
+	var err errmodel.ErrWithMessage
+	var e error
 	var keepFiringFor model.Duration
 	if len(rule.KeepFiringFor) > 0 {
-		keepFiringFor, err = model.ParseDuration(rule.KeepFiringFor)
-		if err != nil {
-			return fmt.Errorf("'keepFiringFor' in alertRule is illegal: %s", rule.KeepFiringFor)
+		keepFiringFor, e = model.ParseDuration(rule.KeepFiringFor)
+		if e != nil {
+			err.Err = e
+			err.Code = code.AlertKeepFiringForIllegalError
+			return err
 		}
 	}
 
-	forDuration, err := model.ParseDuration(rule.For)
-	if err != nil {
-		return fmt.Errorf("'for' in alertRule is illegal: %s", rule.KeepFiringFor)
+	forDuration, e := model.ParseDuration(rule.For)
+	if e != nil {
+		err.Err = e
+		err.Code = code.AlertForIllegalError
+		return err
 	}
 	ruleNode := promfmt.RuleNode{
 		For:           forDuration,
