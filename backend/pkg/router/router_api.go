@@ -61,9 +61,21 @@ func setApiRouter(r *resource) {
 
 	logApi := r.mux.Group("/api/log")
 	{
-		logHandler := log.New(r.logger, r.ch)
+		logHandler := log.New(r.logger, r.ch, r.pkg_db)
 		logApi.POST("/fault/pagelist", logHandler.GetFaultLogPageList())
 		logApi.POST("/fault/content", logHandler.GetFaultLogContent())
+		logApi.POST("/create", logHandler.CreateLogTable())
+		logApi.POST("/update", logHandler.UpdateLogTable())
+		logApi.POST("/drop", logHandler.DropLogTable())
+
+		logApi.POST("/query", logHandler.QueryLog())
+		logApi.POST("/chart", logHandler.GetLogChart())
+		logApi.POST("/index", logHandler.GetLogIndex())
+
+		logApi.POST("/table", logHandler.GetLogTableInfo())
+
+		logApi.POST("/rule/get", logHandler.GetLogParseRule())
+
 	}
 
 	traceApi := r.mux.Group("/api/trace")

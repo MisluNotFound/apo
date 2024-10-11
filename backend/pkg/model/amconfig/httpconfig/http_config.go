@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// repeated from github.com/prometheus/common@v0.55.0/config/http_config.go
 package httpconfig
 
 import (
@@ -376,27 +375,8 @@ func (c *HTTPClientConfig) Validate() error {
 		if nonZeroCount(string(c.Authorization.Credentials) != "", c.Authorization.CredentialsFile != "", c.Authorization.CredentialsRef != "") > 1 {
 			return fmt.Errorf("at most one of authorization credentials & credentials_file must be configured")
 		}
-		c.Authorization.Type = strings.TrimSpace(c.Authorization.Type)
-		if len(c.Authorization.Type) == 0 {
-			c.Authorization.Type = "Bearer"
-		}
-		if strings.ToLower(c.Authorization.Type) == "basic" {
-			return fmt.Errorf(`authorization type cannot be set to "basic", use "basic_auth" instead`)
-		}
-		if c.BasicAuth != nil || c.OAuth2 != nil {
-			return fmt.Errorf("at most one of basic_auth, oauth2 & authorization must be configured")
-		}
 	} else {
-		if len(c.BearerToken) > 0 {
-			c.Authorization = &Authorization{Credentials: c.BearerToken}
-			c.Authorization.Type = "Bearer"
-			c.BearerToken = ""
-		}
-		if len(c.BearerTokenFile) > 0 {
-			c.Authorization = &Authorization{CredentialsFile: c.BearerTokenFile}
-			c.Authorization.Type = "Bearer"
-			c.BearerTokenFile = ""
-		}
+
 	}
 	if c.OAuth2 != nil {
 		if c.BasicAuth != nil {

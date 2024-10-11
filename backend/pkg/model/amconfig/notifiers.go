@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// copy from github.com/prometheus/alertmanager@v0.27.0/config/config.go
-
 package amconfig
 
 import (
@@ -506,8 +504,8 @@ type WebhookConfig struct {
 	HTTPConfig *httpconfig.HTTPClientConfig `yaml:"http_config,omitempty" json:"httpConfig,omitempty"`
 
 	// URL to send POST request to.
-	URL     *URL   `yaml:"url" json:"url"`
-	URLFile string `yaml:"url_file" json:"urlFile"`
+	URL     *URL   `yaml:"url,omitempty" json:"url,omitempty"`
+	URLFile string `yaml:"url_file,omitempty" json:"urlFile,omitempty"`
 
 	// MaxAlerts is the maximum number of alerts to be sent per webhook message.
 	// Alerts exceeding this threshold will be truncated. Setting this to 0

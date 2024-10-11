@@ -3,6 +3,7 @@ package log
 import (
 	"github.com/CloudDetail/apo/backend/pkg/core"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
+	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	"github.com/CloudDetail/apo/backend/pkg/services/log"
 	"go.uber.org/zap"
 )
@@ -17,6 +18,37 @@ type Handler interface {
 	// @Tags API.log
 	// @Router /api/log/fault/content [post]
 	GetFaultLogContent() core.HandlerFunc
+
+	// CreateLogTable 创建日志表
+	// @Tags API.log
+	// @Router /api/log/create [post]
+	CreateLogTable() core.HandlerFunc
+
+	DropLogTable() core.HandlerFunc
+
+	UpdateLogTable() core.HandlerFunc
+
+	// QueryLog 查询全量日志
+	// @Tags API.log
+	// @Router /api/log/query [post]
+	QueryLog() core.HandlerFunc
+
+	// GetLogChart 获取日志趋势图
+	// @Tags API.log
+	// @Router /api/log/chart [post]
+	GetLogChart() core.HandlerFunc
+
+	// GetLogIndex 分析字段索引
+	// @Tags API.log
+	// @Router /api/log/index [post]
+	GetLogIndex() core.HandlerFunc
+
+	// GetLogTableInfo 获取日志表信息
+	// @Tags API.log
+	// @Router /api/log/table [post]
+	GetLogTableInfo() core.HandlerFunc
+
+	GetLogParseRule() core.HandlerFunc
 }
 
 type handler struct {
@@ -24,9 +56,9 @@ type handler struct {
 	logService log.Service
 }
 
-func New(logger *zap.Logger, chRepo clickhouse.Repo) Handler {
+func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo) Handler {
 	return &handler{
 		logger:     logger,
-		logService: log.New(chRepo),
+		logService: log.New(chRepo, dbRepo),
 	}
 }
