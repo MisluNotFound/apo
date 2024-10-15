@@ -874,12 +874,16 @@ definitions:
         type: string
       endTime:
         type: integer
+      logField:
+        type: string
       query:
         type: string
       startTime:
         minimum: 0
         type: integer
       tableName:
+        type: string
+      timeField:
         type: string
     required:
     - endTime
@@ -890,6 +894,8 @@ definitions:
         type: string
       endTime:
         type: integer
+      logField:
+        type: string
       pageNum:
         type: integer
       pageSize:
@@ -900,6 +906,8 @@ definitions:
         minimum: 0
         type: integer
       tableName:
+        type: string
+      timeField:
         type: string
     required:
     - endTime
@@ -942,6 +950,13 @@ definitions:
     x-enum-varnames:
     - PF_Labels
     - PF_Flags
+  request.QueryLogParseRequest:
+    properties:
+      dataBase:
+        type: string
+      tableName:
+        type: string
+    type: object
   request.SetSingleTTLRequest:
     properties:
       day:
@@ -1010,6 +1025,19 @@ definitions:
     - oldAlert
     - oldGroup
     type: object
+  request.UpdateLogParseRequest:
+    properties:
+      dataBase:
+        type: string
+      parseName:
+        type: string
+      parseRule:
+        type: string
+      routeRule:
+        type: string
+      tableName:
+        type: string
+    type: object
   response.CheckAlertRuleResponse:
     properties:
       available:
@@ -1020,6 +1048,15 @@ definitions:
       id:
         description: 主键ID
         type: integer
+    type: object
+  response.DBInfo:
+    properties:
+      dataBase:
+        type: string
+      tables:
+        items:
+          $ref: '#/definitions/response.LogTableInfo'
+        type: array
     type: object
   response.DeleteResponse:
     properties:
@@ -1469,6 +1506,15 @@ definitions:
       percent:
         type: number
     type: object
+  response.Instance:
+    properties:
+      dataBases:
+        items:
+          $ref: '#/definitions/response.DBInfo'
+        type: array
+      instanceName:
+        type: string
+    type: object
   response.InstanceData:
     properties:
       alertReason:
@@ -1572,6 +1618,8 @@ definitions:
     properties:
       count:
         type: integer
+      error:
+        type: string
       histograms:
         items:
           $ref: '#/definitions/response.LogHistogram'
@@ -1592,10 +1640,30 @@ definitions:
     type: object
   response.LogIndexResponse:
     properties:
+      error:
+        type: string
       indexs:
         items:
           $ref: '#/definitions/response.IndexItem'
         type: array
+    type: object
+  response.LogItem:
+    properties:
+      content: {}
+      tags:
+        additionalProperties: true
+        type: object
+    type: object
+  response.LogParseResponse:
+    properties:
+      error:
+        type: string
+      parseName:
+        type: string
+      parseRule:
+        type: string
+      routeRule:
+        type: string
     type: object
   response.LogQueryResponse:
     properties:
@@ -1605,6 +1673,8 @@ definitions:
         items:
           type: string
         type: array
+      error:
+        type: string
       hiddenFields:
         items:
           type: string
@@ -1613,27 +1683,34 @@ definitions:
         type: integer
       logs:
         items:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/response.LogItem'
         type: array
       query:
         type: string
     type: object
-  response.LogTable:
+  response.LogTableInfo:
     properties:
       cluster:
         type: string
+      logField:
+        type: string
       tableName:
+        type: string
+      timeField:
         type: string
     type: object
   response.LogTableInfoResponse:
     properties:
-      logTables:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/response.LogTable'
-          type: array
-        type: object
+      error:
+        type: string
+      instances:
+        items:
+          $ref: '#/definitions/response.Instance'
+        type: array
+      parses:
+        items:
+          $ref: '#/definitions/response.Parse'
+        type: array
     type: object
   response.Pagination:
     properties:
@@ -1646,6 +1723,17 @@ definitions:
       total:
         description: 总记录数
         type: integer
+    type: object
+  response.Parse:
+    properties:
+      dataBase:
+        type: string
+      parseInfo:
+        type: string
+      parseName:
+        type: string
+      tableName:
+        type: string
     type: object
   response.RYGScoreDetail:
     properties:
@@ -2347,6 +2435,58 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 查询全量日志日志
+      tags:
+      - API.log
+  /api/log/rule/get:
+    post:
+      consumes:
+      - application/json
+      description: 获取日志表解析规则
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.QueryLogParseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LogParseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取日志表解析规则
+      tags:
+      - API.log
+  /api/log/rule/update:
+    post:
+      consumes:
+      - application/json
+      description: 更新日志表解析规则
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateLogParseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LogParseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 更新日志表解析规则
       tags:
       - API.log
   /api/log/table:

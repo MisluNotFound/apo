@@ -1,6 +1,10 @@
 package request
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/CloudDetail/apo/backend/config"
+)
 
 type Field struct {
 	Name string `json:"name"`
@@ -21,6 +25,7 @@ type LogTableRequest struct {
 	DataBase  string             `json:"dataBase"`
 	TableName string             `json:"tableName"`
 	Cluster   string             `json:"cluster"`
+	Replica   bool               `json:"replica"`
 	TTL       uint               `json:"ttl"`
 	Fields    []Field            `json:"fields"`
 	Buffer    BufferEngineConfig `json:"buffer"`
@@ -38,10 +43,16 @@ func (q *LogTableRequest) FillerValue() {
 		q.TTL = 7
 	}
 	if q.TableName == "" {
-		q.TableName = "apo_logs"
+		q.TableName = "raw_logs"
 	}
 	if q.DataBase == "" {
-		q.DataBase = "default"
+		q.DataBase = "apo"
+	}
+	if q.Cluster == "" {
+		q.Cluster = config.Get().ClickHouse.Cluster
+	}
+	if !q.Replica {
+		q.Replica = config.Get().ClickHouse.Replica
 	}
 	if q.Buffer.NumLayers == 0 {
 		q.Buffer.NumLayers = 16

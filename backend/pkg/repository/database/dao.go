@@ -19,6 +19,8 @@ type Repo interface {
 	DeleteThreshold(serviceName string, endPoint string) error
 	OperateLogTableInfo(model *LogTableInfo, op Operator) error
 	GetAllLogTable() ([]LogTableInfo, error)
+	UpdateLogPaseRule(model *LogTableInfo) error
+	GetAllOtherLogTable() ([]OtherLogTable, error)
 }
 
 type daoRepo struct {
@@ -65,7 +67,12 @@ func New(zapLogger *zap.Logger) (repo Repo, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	err = database.AutoMigrate(&LogTableInfo{})
+	if err != nil {
+		return nil, err
+	}
+	err = database.AutoMigrate(&OtherLogTable{})
 	if err != nil {
 		return nil, err
 	}

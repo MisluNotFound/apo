@@ -852,6 +852,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/log/rule/get": {
+            "post": {
+                "description": "获取日志表解析规则",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "获取日志表解析规则",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.QueryLogParseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.LogParseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/rule/update": {
+            "post": {
+                "description": "更新日志表解析规则",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "更新日志表解析规则",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateLogParseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.LogParseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/log/table": {
             "post": {
                 "description": "获取日志表信息",
@@ -4353,6 +4433,9 @@ const docTemplate = `{
                 "endTime": {
                     "type": "integer"
                 },
+                "logField": {
+                    "type": "string"
+                },
                 "query": {
                     "type": "string"
                 },
@@ -4361,6 +4444,9 @@ const docTemplate = `{
                     "minimum": 0
                 },
                 "tableName": {
+                    "type": "string"
+                },
+                "timeField": {
                     "type": "string"
                 }
             }
@@ -4377,6 +4463,9 @@ const docTemplate = `{
                 "endTime": {
                     "type": "integer"
                 },
+                "logField": {
+                    "type": "string"
+                },
                 "pageNum": {
                     "type": "integer"
                 },
@@ -4391,6 +4480,9 @@ const docTemplate = `{
                     "minimum": 0
                 },
                 "tableName": {
+                    "type": "string"
+                },
+                "timeField": {
                     "type": "string"
                 }
             }
@@ -4439,6 +4531,17 @@ const docTemplate = `{
                 "PF_Labels",
                 "PF_Flags"
             ]
+        },
+        "request.QueryLogParseRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                }
+            }
         },
         "request.SetSingleTTLRequest": {
             "type": "object",
@@ -4539,6 +4642,26 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateLogParseRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "parseRule": {
+                    "type": "string"
+                },
+                "routeRule": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                }
+            }
+        },
         "response.CheckAlertRuleResponse": {
             "type": "object",
             "properties": {
@@ -4553,6 +4676,20 @@ const docTemplate = `{
                 "id": {
                     "description": "主键ID",
                     "type": "integer"
+                }
+            }
+        },
+        "response.DBInfo": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.LogTableInfo"
+                    }
                 }
             }
         },
@@ -5221,6 +5358,20 @@ const docTemplate = `{
                 }
             }
         },
+        "response.Instance": {
+            "type": "object",
+            "properties": {
+                "dataBases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DBInfo"
+                    }
+                },
+                "instanceName": {
+                    "type": "string"
+                }
+            }
+        },
         "response.InstanceData": {
             "type": "object",
             "properties": {
@@ -5374,6 +5525,9 @@ const docTemplate = `{
                 "count": {
                     "type": "integer"
                 },
+                "error": {
+                    "type": "string"
+                },
                 "histograms": {
                     "type": "array",
                     "items": {
@@ -5405,11 +5559,41 @@ const docTemplate = `{
         "response.LogIndexResponse": {
             "type": "object",
             "properties": {
+                "error": {
+                    "type": "string"
+                },
                 "indexs": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/response.IndexItem"
                     }
+                }
+            }
+        },
+        "response.LogItem": {
+            "type": "object",
+            "properties": {
+                "content": {},
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "response.LogParseResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "parseRule": {
+                    "type": "string"
+                },
+                "routeRule": {
+                    "type": "string"
                 }
             }
         },
@@ -5425,6 +5609,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "error": {
+                    "type": "string"
+                },
                 "hiddenFields": {
                     "type": "array",
                     "items": {
@@ -5437,8 +5624,7 @@ const docTemplate = `{
                 "logs": {
                     "type": "array",
                     "items": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/definitions/response.LogItem"
                     }
                 },
                 "query": {
@@ -5446,13 +5632,19 @@ const docTemplate = `{
                 }
             }
         },
-        "response.LogTable": {
+        "response.LogTableInfo": {
             "type": "object",
             "properties": {
                 "cluster": {
                     "type": "string"
                 },
+                "logField": {
+                    "type": "string"
+                },
                 "tableName": {
+                    "type": "string"
+                },
+                "timeField": {
                     "type": "string"
                 }
             }
@@ -5460,13 +5652,19 @@ const docTemplate = `{
         "response.LogTableInfoResponse": {
             "type": "object",
             "properties": {
-                "logTables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/response.LogTable"
-                        }
+                "error": {
+                    "type": "string"
+                },
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Instance"
+                    }
+                },
+                "parses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Parse"
                     }
                 }
             }
@@ -5485,6 +5683,23 @@ const docTemplate = `{
                 "total": {
                     "description": "总记录数",
                     "type": "integer"
+                }
+            }
+        },
+        "response.Parse": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "parseInfo": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
                 }
             }
         },

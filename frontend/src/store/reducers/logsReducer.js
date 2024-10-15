@@ -1,18 +1,26 @@
 export const logsInitialState = {
-  database: '',
-  tableName: '',
+  tableInfo: {
+    dataBase: '',
+    tableName: '',
+    cluster: '',
+  },
   logRule: {},
   logs: [],
   pagination: {
     pageIndex: 1,
-    pageSize: 10,
+    pageSize: 50,
     total: 0,
   },
+
   logsChartData: [],
   defaultFields: [],
+
   hiddenFields: [],
   query: '',
   loading: true,
+
+  // 保存字段和index索引map 当dataBase、时间改变清空
+  fieldIndexMap: {},
 }
 
 const logsReducer = (state = logsInitialState, action) => {
@@ -33,10 +41,15 @@ const logsReducer = (state = logsInitialState, action) => {
       return { ...state, loading: action.payload }
     case 'updateDataBase':
       return { ...state, database: action.payload }
-    case 'updateTableName':
-      return { ...state, tableName: action.payload }
+    case 'updateTableInfo':
+      return { ...state, tableInfo: action.payload }
     case 'setLogState':
       return { ...state, ...action.payload }
+    case 'updateFieldIndexMap':
+      //增量更新
+      return { ...state, fieldIndexMap: { ...state.fieldIndexMap, ...action.payload } }
+    case 'clearFieldIndexMap':
+      return { ...state, fieldIndexMap: {} }
     default:
       return state
   }

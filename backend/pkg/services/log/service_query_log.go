@@ -2,7 +2,6 @@ package log
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
@@ -11,11 +10,14 @@ import (
 
 func (s *service) QueryLog(req *request.LogQueryRequest) (*response.LogQueryResponse, error) {
 	logs, sql, err := s.chRepo.QueryAllLogs(req)
+	res := &response.LogQueryResponse{Query: sql}
 	if err != nil {
-		return nil, err
+		res.Err = err.Error()
+		return res, nil
 	}
 	if len(logs) == 0 {
-		return nil, errors.New("no found logs")
+		res.Err = "未查询到任何日志数据"
+		return res, nil
 	}
 	allFileds := []string{}
 	if len(logs) > 0 {
@@ -31,10 +33,10 @@ func (s *service) QueryLog(req *request.LogQueryRequest) (*response.LogQueryResp
 	}
 	s.dbRepo.OperateLogTableInfo(model, database.QUERY)
 	var fields []request.Field
-	err = json.Unmarshal([]byte(model.Fields), &fields)
-	if err != nil {
-		return nil, err
-	}
+	_ = json.Unmarshal([]byte(model.Fields), &fields)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	for _, field := range fields {
 		hiddenFields = append(hiddenFields, field.Name)
@@ -48,20 +50,26 @@ func (s *service) QueryLog(req *request.LogQueryRequest) (*response.LogQueryResp
 	var defaultFields []string
 	for _, item := range allFileds {
 		if _, exists := hMap[item]; !exists {
-			if item == "timestamp" {
+			if item == req.TimeField || item == req.LogField {
 				continue
 			}
 			defaultFields = append(defaultFields, item)
 		}
 	}
-
-	res := &response.LogQueryResponse{
-		Limited:       req.PageSize,
-		HiddenFields:  hiddenFields,
-		DefaultFields: defaultFields,
-		Logs:          logs,
-		Query:         sql,
+	logitems := make([]response.LogItem, len(logs))
+	for i, log := range logs {
+		content := log[req.LogField]
+		delete(log, req.LogField)
+		logitems[i] = response.LogItem{
+			Content: content,
+			Tags:    log,
+		}
 	}
 
+	res.Limited = req.PageSize
+	res.HiddenFields = hiddenFields
+	res.DefaultFields = defaultFields
+	res.Logs = logitems
+	res.Query = sql
 	return res, nil
 }

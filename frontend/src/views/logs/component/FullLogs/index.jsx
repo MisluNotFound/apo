@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CCard } from '@coreui/react'
 import { getFullLogApi, getFullLogChartApi } from 'src/api/logs'
 import { useSearchParams } from 'react-router-dom'
@@ -8,28 +8,53 @@ import SearchBar from './component/SerarchBar'
 import IndexList from './component/IndexList'
 import LogQueryResult from './component/LogQueryResult'
 import { useLogsContext } from 'src/contexts/LogsContext'
+import { useDebounce, useUpdateEffect } from 'react-use'
 function FullLogs() {
-  const { query, pagination, fetchData, loading } = useLogsContext()
+  const {
+    query,
+    pagination,
+    fetchData,
+    loading,
+    clearFieldIndexMap,
+    updateLogsPagination,
+    tableInfo,
+  } = useLogsContext()
 
   const [searchParams] = useSearchParams()
 
-  useEffect(() => {
-    const startTime = ISOToTimestamp(searchParams.get('log-from'))
-    const endTime = ISOToTimestamp(searchParams.get('log-to'))
-    if (startTime && endTime) {
+  useUpdateEffect(() => {
+    if (searchParams.get('log-from') && searchParams.get('log-to')) {
       fetchData({
-        startTime,
-        endTime,
+        startTime: ISOToTimestamp(searchParams.get('log-from')),
+        endTime: ISOToTimestamp(searchParams.get('log-to')),
       })
     }
   }, [
     pagination.pageIndex,
     pagination.pageSize,
-    searchParams.get('log-from'),
-    searchParams.get('log-to'),
     //先隐藏 后续加上字段筛选了再放开，目前只支持搜索按钮和初始化
     // query,
   ])
+  //防抖避免跳转使用旧时间
+  useDebounce(
+    () => {
+      clearFieldIndexMap()
+      if (searchParams.get('log-from') && searchParams.get('log-to')) {
+        if (pagination.pageIndex === 1) {
+          fetchData({
+            startTime: ISOToTimestamp(searchParams.get('log-from')),
+            endTime: ISOToTimestamp(searchParams.get('log-to')),
+          })
+        } else {
+          updateLogsPagination({
+            pageIndex: 1,
+          })
+        }
+      }
+    },
+    300, // 延迟时间 300ms
+    [searchParams.get('log-from'), searchParams.get('log-to'), tableInfo, query],
+  )
   return (
     <>
       <LoadingSpinner loading={loading} />
@@ -42,7 +67,7 @@ function FullLogs() {
           <div className="w-[220px] flex-shrink-0 flex-grow-0">
             <IndexList />
           </div>
-          <div className=" h-full flex-1">
+          <div className=" h-full flex-1 overflow-hidden">
             <LogQueryResult />
           </div>
         </div>

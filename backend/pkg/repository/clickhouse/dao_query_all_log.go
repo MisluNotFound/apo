@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	querySQl = `SELECT * FROM %s.%s %s %s`
+	querySQl = `SELECT * FROM %s.%s WHERE %s %s`
 )
 
 func (ch *chRepo) QueryAllLogs(req *request.LogQueryRequest) ([]map[string]any, string, error) {
-	condition := fmt.Sprintf("Where timestamp >= toDateTime64(%d, 3) AND timestamp < toDateTime64(%d, 3) AND %s", req.StartTime/1000000, req.EndTime/1000000, req.Query)
+	condition := NewQueryCondition(req.StartTime, req.EndTime, req.TimeField, req.Query)
 	bySql := NewByLimitBuilder().
-		OrderBy("timestamp", false).
+		OrderBy(req.TimeField, false).
 		Limit(req.PageSize).
 		Offset((req.PageNum - 1) * req.PageSize).
 		String()

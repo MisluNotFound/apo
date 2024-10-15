@@ -2,8 +2,9 @@ package alerts
 
 import (
 	"errors"
-	"github.com/CloudDetail/apo/backend/pkg/model"
 	"net/http"
+
+	"github.com/CloudDetail/apo/backend/pkg/model"
 
 	"github.com/CloudDetail/apo/backend/pkg/code"
 	"github.com/CloudDetail/apo/backend/pkg/core"

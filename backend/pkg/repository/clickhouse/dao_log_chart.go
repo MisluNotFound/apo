@@ -25,8 +25,8 @@ func calculateInterval(interval int64, timeField string) (string, int64) {
 }
 
 func chartSQL(req *request.LogQueryRequest) (string, int64) {
-	group, interval := calculateInterval((req.EndTime-req.StartTime)/1000000, "timestamp")
-	condition := fmt.Sprintf("timestamp >= toDateTime64(%d, 3) AND timestamp < toDateTime64(%d, 3) AND %s", req.StartTime/1000000, req.EndTime/1000000, req.Query)
+	group, interval := calculateInterval((req.EndTime-req.StartTime)/1000000, req.TimeField)
+	condition := NewQueryCondition(req.StartTime, req.EndTime, req.TimeField, req.Query)
 	sql := fmt.Sprintf("SELECT count(*) as count, %s as timeline FROM %s.%s WHERE %s GROUP BY %s ORDER BY %s ASC",
 		group,
 		req.DataBase,
