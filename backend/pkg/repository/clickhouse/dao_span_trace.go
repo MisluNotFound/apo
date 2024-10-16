@@ -213,7 +213,6 @@ type QueryTraceResult struct {
 	SpanId         string  `ch:"span_id" json:"spanId"`
 	IsError        bool    `ch:"is_error" json:"isError"`
 	ThresholdValue float64 `ch:"threshold_value" json:"thresholdValue"`
-	MetricsValue   uint64  `ch:"metrics_value" json:"metricsValue"`
 
 	Labels  map[string]string `ch:"labels" json:"labels"`
 	Flags   map[string]bool   `ch:"flags"  json:"flags"`
@@ -468,36 +467,22 @@ func (ch *chRepo) GetAnomalyTrace(req *request.GetAnomalySpanRequest) ([]QueryTr
 	} else if req.IsSlow == "false" {
 		queryBuilder = queryBuilder.Equals("is_slow", false)
 	}
-
-	metrics := model.GetPolarisMetrics(req.Reason)
-	queryFuncBuilder := NewFuncBuilder()
-	for i := range metrics {
-		queryFuncBuilder.AddFunc(fmt.Sprintf("mapContains(metrics, '%s')", metrics[i]))
-	}
-	querySql := queryBuilder.String() + " AND " + queryFuncBuilder.String("AND")
+	querySql := queryBuilder.String()
 
 	// 构造select
-	fieldBuilder := NewFieldBuilder().Fields("trace_id", "threshold_value", "metrics").
-		Alias("apm_span_id", "span_id").
-		Alias("toUnixTimestamp64Nano(timestamp) / 1000", "ts").
-		Alias("intDiv(duration, 1000)", "duration_us")
-
-	keys := ""
-	for i := range metrics {
-		if i > 0 {
-			keys += ", "
-		}
-		keys += fmt.Sprintf("'%s'", metrics[i])
-	}
-	fieldBuilder = fieldBuilder.Alias(fmt.Sprintf("mapFilter((k, v) -> k IN (%s), metrics)", keys), "metrics")
-	fieldSql := fieldBuilder.String()
+	fieldSql := `trace_id, threshold_value, metrics,
+		apm_span_id as span_id, intDiv(toUnixTimestamp64Nano(timestamp), 1000) as ts, 
+		intDiv(duration, 1000) as duration_us, metrics`
 
 	// 构造order by limit offset
-	orderSqlBuilder := NewFuncBuilder()
+	metrics := model.GetPolarisMetrics(req.Reason)
+	orderSql := ""
 	for i := range metrics {
-		orderSqlBuilder.AddFunc(fmt.Sprintf("metrics['%s']", metrics[i]))
+		if i > 0 {
+			orderSql += " + "
+		}
+		orderSql += fmt.Sprintf("metrics['%s']", metrics[i])
 	}
-	orderSql := orderSqlBuilder.String("+")
 	byLimitSql := NewByLimitBuilder().
 		OrderBy(orderSql, false).
 		Offset((req.CurrentPage - 1) * req.PageSize).
