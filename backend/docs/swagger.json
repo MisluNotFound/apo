@@ -1452,7 +1452,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "API.service"
+                    "API.alert"
                 ],
                 "summary": "获取服务和根因类型的故障报告",
                 "parameters": [
@@ -3653,6 +3653,9 @@
                 "isError": {
                     "type": "boolean"
                 },
+                "isSlow": {
+                    "type": "boolean"
+                },
                 "labels": {
                     "type": "object",
                     "additionalProperties": {
@@ -3664,6 +3667,9 @@
                     "additionalProperties": {
                         "type": "integer"
                     }
+                },
+                "reason": {
+                    "type": "string"
                 },
                 "serviceName": {
                     "type": "string"
@@ -4459,7 +4465,6 @@
             "required": [
                 "contentKey",
                 "endTime",
-                "reason",
                 "service",
                 "startTime"
             ],

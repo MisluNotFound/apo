@@ -12,7 +12,7 @@ import (
 // GetAnomalySpan 获取服务和根因类型的故障报告
 // @Summary 获取服务和根因类型的故障报告
 // @Description 获取服务和根因类型的故障报告
-// @Tags API.service
+// @Tags API.alert
 // @Accept application/x-www-form-urlencoded
 // @Produce json
 // @Param Request body request.GetAnomalySpanRequest true "请求信息"

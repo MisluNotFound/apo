@@ -1460,7 +1460,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "API.service"
+                    "API.alert"
                 ],
                 "summary": "获取服务和根因类型的故障报告",
                 "parameters": [
@@ -3661,6 +3661,9 @@ const docTemplate = `{
                 "isError": {
                     "type": "boolean"
                 },
+                "isSlow": {
+                    "type": "boolean"
+                },
                 "labels": {
                     "type": "object",
                     "additionalProperties": {
@@ -3672,6 +3675,9 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "integer"
                     }
+                },
+                "reason": {
+                    "type": "string"
                 },
                 "serviceName": {
                     "type": "string"
@@ -4467,7 +4473,6 @@ const docTemplate = `{
             "required": [
                 "contentKey",
                 "endTime",
-                "reason",
                 "service",
                 "startTime"
             ],

@@ -211,7 +211,9 @@ type QueryTraceResult struct {
 	EndPoint       string  `ch:"endpoint" json:"endpoint"`
 	InstanceId     string  `ch:"instance_id" json:"instanceId"`
 	SpanId         string  `ch:"span_id" json:"spanId"`
+	Reason         string  `ch:"reason" json:"reason"`
 	IsError        bool    `ch:"is_error" json:"isError"`
+	IsSlow         bool    `ch:"is_slow" json:"isSlow"`
 	ThresholdValue float64 `ch:"threshold_value" json:"thresholdValue"`
 
 	Labels  map[string]string `ch:"labels" json:"labels"`
@@ -470,9 +472,9 @@ func (ch *chRepo) GetAnomalyTrace(req *request.GetAnomalySpanRequest) ([]QueryTr
 	querySql := queryBuilder.String()
 
 	// 构造select
-	fieldSql := `trace_id, threshold_value, metrics,
+	fieldSql := `trace_id, threshold_value, labels['mutated_type'] as reason,
 		apm_span_id as span_id, intDiv(toUnixTimestamp64Nano(timestamp), 1000) as ts, 
-		intDiv(duration, 1000) as duration_us, metrics`
+		intDiv(duration, 1000) as duration_us, metrics, flags['is_error'] as is_error, flags['is_slow'] as is_slow`
 
 	// 构造order by limit offset
 	metrics := model.GetPolarisMetrics(req.Reason)
@@ -482,6 +484,10 @@ func (ch *chRepo) GetAnomalyTrace(req *request.GetAnomalySpanRequest) ([]QueryTr
 			orderSql += " + "
 		}
 		orderSql += fmt.Sprintf("metrics['%s']", metrics[i])
+	}
+
+	if len(orderSql) == 0 {
+		orderSql = "duration"
 	}
 	byLimitSql := NewByLimitBuilder().
 		OrderBy(orderSql, false).

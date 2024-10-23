@@ -184,7 +184,7 @@ type GetAnomalySpanRequest struct {
 	EndTime    int64  `json:"endTime" binding:"required"`
 	Service    string `json:"service" binding:"required"`
 	ContentKey string `json:"contentKey" binding:"required"`
-	Reason     string `json:"reason" binding:"required"`
+	Reason     string `json:"reason"`
 	IsSlow     string `json:"isSlow"`
 	IsError    string `json:"isError"`
 	*PageParam `json:",inline"`
