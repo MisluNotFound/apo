@@ -1,6 +1,7 @@
 package alertanalyze
 
 import (
+	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
@@ -14,7 +15,7 @@ type Service interface {
 
 	// AlertImpact 获取告警事件的影响面
 	// 如果关联所需的Label不足,error会返回ErrAlertImpactMissingTag提示期望哪些tag
-	AlertImpact(eventid string, startTime, endTime int64) ([]clickhouse.EntryNode, error)
+	AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.EntryNodeRelations, []response.ImpactAlertEvent, *model.Pagination, error)
 
 	// SearchAnormalEventByEntry 查询入口节点下游的异常事件
 	SearchAnormalEventByEntry(req *request.GetDescendantAnormalEventRequest) (*response.GetDescendantAnormalEventResponse, error)

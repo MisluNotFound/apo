@@ -542,8 +542,8 @@ definitions:
     - AnormalTypeAlertContainer
     - AnormalTypeAlertInfra
     - AnormalTypeAlertNet
-    - AnormalTypeMutation
     - AnormalTypeError
+    - AnormalTypeMutation
   model.ModifyTableTTLMap:
     properties:
       TTLExpression:
@@ -1116,6 +1116,8 @@ definitions:
     type: object
   response.DescendantAnormalEventRecord:
     properties:
+      alertKey:
+        type: string
       anormalMsg:
         type: string
       anormalObject:
@@ -1315,6 +1317,10 @@ definitions:
         items:
           $ref: '#/definitions/response.DescendantAnormalCounts'
         type: array
+      finalAnormalEvents:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalEventRecord'
+        type: array
       originAnormalCounts:
         items:
           $ref: '#/definitions/response.DescendantAnormalCounts'
@@ -1499,6 +1505,10 @@ definitions:
         description: 上游节点列表
         items:
           $ref: '#/definitions/clickhouse.TopologyNode'
+        type: array
+      topologyLevels:
+        items:
+          $ref: '#/definitions/response.TopologyNodeLevel'
         type: array
     type: object
   response.GetServiceEndpointTopologyResponse:
@@ -1948,6 +1958,15 @@ definitions:
         description: Value 指标平均值
         type: number
     type: object
+  response.TopologyNodeLevel:
+    properties:
+      depth:
+        type: integer
+      endpoint:
+        type: string
+      service:
+        type: string
+    type: object
 info:
   contact: {}
   license:
@@ -2118,7 +2137,6 @@ paths:
       - description: 查询告警事件ID
         in: query
         name: eventId
-        required: true
         type: string
       - description: 查询开始时间
         in: query

@@ -54,6 +54,12 @@ const (
 			%s
 			GROUP BY entry_service, entry_url
 	`
+
+	SQL_GET_ENTRY_WITH_SERVICE = `SELECT DISTINCT entry_service as service, entry_url as endpoint, nodes.service as discendant_service,nodes.url as discendant_endpoint
+		FROM service_topology
+		ARRAY JOIN nodes
+		%s
+	`
 )
 
 // 查询所有子孙节点列表
@@ -110,16 +116,16 @@ func (ch *chRepo) ListEntryEndpoints(req *request.GetServiceEntryEndpointsReques
 
 // AlertService 告警节点,作为查询入口节点的参数
 type AlertService struct {
-	ServiceName string
+	ServiceName string `json:"serviceName"`
 	// 当ContentKey为空时,表示忽略ContentKey
 	// 当ContentKey不为空时，表示只查询对应ContentKey的数据,用于App Alert时更准确的定位入口节点
-	ContentKey string
+	ContentKey string `json:"contentKey"`
 }
 
 func (ch *chRepo) SearchEntryEndpointsByAlertService(
 	alertServices []AlertService,
 	startTime, endTime int64,
-) ([]EntryNode, error) {
+) ([]EntryNodeRelations, error) {
 	// microseconds -> seconds
 	startTime = startTime / 1000000
 	endTime = endTime / 1000000
@@ -148,8 +154,8 @@ func (ch *chRepo) SearchEntryEndpointsByAlertService(
 		Between("timestamp", startTime, endTime).
 		And(MergeWheres(OrSep, InGroup(endpoints), InGroup(services)))
 
-	results := []EntryNode{}
-	sql := fmt.Sprintf(SQL_GET_ENTRY_NODES, queryBuilder.String())
+	results := []EntryNodeRelations{}
+	sql := fmt.Sprintf(SQL_GET_ENTRY_WITH_SERVICE, queryBuilder.String())
 	if err := ch.conn.Select(context.Background(), &results, sql, queryBuilder.values...); err != nil {
 		return nil, err
 	}
@@ -168,4 +174,11 @@ type ToplogyRelation struct {
 type EntryNode struct {
 	Service  string `ch:"service" json:"service"`
 	Endpoint string `ch:"endpoint" json:"endpoint"`
+}
+
+type EntryNodeRelations struct {
+	EntryNode
+
+	DescendantService  string `ch:"discendant_service" json:"discendantService"`
+	DescendantEndpoint string `ch:"discendant_endpoint" json:"discendantEndpoint"`
 }

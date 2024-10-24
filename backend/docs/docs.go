@@ -268,8 +268,7 @@ const docTemplate = `{
                         "type": "string",
                         "description": "查询告警事件ID",
                         "name": "eventId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -4121,8 +4120,8 @@ const docTemplate = `{
                 "AnormalTypeAlertContainer",
                 "AnormalTypeAlertInfra",
                 "AnormalTypeAlertNet",
-                "AnormalTypeMutation",
-                "AnormalTypeError"
+                "AnormalTypeError",
+                "AnormalTypeMutation"
             ]
         },
         "model.ModifyTableTTLMap": {
@@ -4948,6 +4947,9 @@ const docTemplate = `{
         "response.DescendantAnormalEventRecord": {
             "type": "object",
             "properties": {
+                "alertKey": {
+                    "type": "string"
+                },
                 "anormalMsg": {
                     "type": "string"
                 },
@@ -5243,6 +5245,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/response.DescendantAnormalCounts"
                     }
                 },
+                "finalAnormalEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
+                    }
+                },
                 "originAnormalCounts": {
                     "type": "array",
                     "items": {
@@ -5513,6 +5521,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clickhouse.TopologyNode"
+                    }
+                },
+                "topologyLevels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.TopologyNodeLevel"
                     }
                 }
             }
@@ -6187,6 +6201,20 @@ const docTemplate = `{
                 "value": {
                     "description": "Value 指标平均值",
                     "type": "number"
+                }
+            }
+        },
+        "response.TopologyNodeLevel": {
+            "type": "object",
+            "properties": {
+                "depth": {
+                    "type": "integer"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
                 }
             }
         }

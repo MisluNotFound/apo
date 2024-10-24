@@ -16,6 +16,7 @@ type GetDescendantAnormalEventResponse struct {
 
 	OriginAnormalEvents []DescendantAnormalEventRecord `json:"originAnormalEvents"`
 	DeltaAnormalEvents  []DescendantAnormalEventRecord `json:"deltaAnormalEvents"`
+	FinalAnormalEvents  []DescendantAnormalEventRecord `json:"finalAnormalEvents"`
 }
 
 type DescendantAnormalCounts struct {
@@ -26,6 +27,8 @@ type DescendantAnormalCounts struct {
 
 type DescendantAnormalEventRecord struct {
 	model.EndpointKey
+
+	AlertKey string `json:"alertKey"`
 
 	AnormalType   model.AnormalType `json:"anormalType"`
 	Timestamp     int64             `json:"timestamp"`

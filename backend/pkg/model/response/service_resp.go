@@ -256,6 +256,22 @@ type GetServiceEntryEndpointsResponse struct {
 	Data   []*EntryInstanceData `json:"data"`
 }
 
+type GetAlertImpactResponse struct {
+	Data []*EntryInstanceData `json:"data"`
+
+	AlertEvents []ImpactAlertEvent `json:"alertEvents"`
+	// 告警事件分页
+	Pagination *model.Pagination `json:"pagination"`
+}
+
+type ImpactAlertEvent struct {
+	*model.AlertEvent
+
+	IsAnalyzed      bool                      `json:"isAnalyzed"`
+	ImpactEndpoints []clickhouse.AlertService `json:"impactEndpoints"`
+	ImpactEntrys    []model.EndpointKey       `json:"impactEntrys"`
+}
+
 type EntryInstanceData struct {
 	ServiceName    string          `json:"serviceName"`
 	Namespaces     []string        `json:"namespaces"` // 应用所属命名空间,可能为空

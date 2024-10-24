@@ -1,5 +1,9 @@
 package model
 
+import (
+	"fmt"
+)
+
 type AnormalType int
 
 // AnormalType 所有可分类的异常平铺到最外层,便于前端过滤
@@ -33,6 +37,8 @@ type AnormalUpdateTS struct {
 type AnormalEventDetail struct {
 	EndpointKey
 
+	AlertKey string `json:"alertKey"`
+
 	// 影响的实例
 	AlertObject string `json:"alertObject"`
 
@@ -41,6 +47,10 @@ type AnormalEventDetail struct {
 
 	// 不同时间点的异常信息
 	AlertMessage map[int64]string `json:"alertMessage"`
+}
+
+func (d *AnormalEventDetail) GetEventKey() string {
+	return fmt.Sprintf("%s-%s:%s", d.EndpointKey.ServiceName, d.EndpointKey.ContentKey, d.AlertKey)
 }
 
 type EndpointKey struct {

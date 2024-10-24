@@ -123,12 +123,14 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 
 	originAnormalEvents := []response.DescendantAnormalEventRecord{}
 	deltaAnormalEvents := []response.DescendantAnormalEventRecord{}
+	finalAnrmalEvents := []response.DescendantAnormalEventRecord{}
 
 	// anormalEventTimeGroup := make(map[int64][]model.AnormalEvent)
 	for _, event := range anormalEventList {
 		// status Before Firing
 		isFiringBefore := model.StatusResolved
-		lastEventTS := int64(-1)
+		lastEventTSBefore := int64(-1)
+		lastEventTSAfter := int64(-1)
 		isFiringAfter := model.StatusResolved
 		deltaEventTS := []model.AnormalUpdateTS{}
 
@@ -159,10 +161,11 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 			// 统计用户时间片前的状态
 			if updateTS.Timestamp < req.DeltaStartTime {
 				isFiringBefore = updateTS.AnormalStatus
-				lastEventTS = updateTS.Timestamp
+				lastEventTSBefore = updateTS.Timestamp
 			}
 			if updateTS.Timestamp < req.DeltaEndTime {
 				isFiringAfter = updateTS.AnormalStatus
+				lastEventTSAfter = updateTS.Timestamp
 				if updateTS.Timestamp > req.DeltaStartTime {
 					deltaEventTS = append(deltaEventTS, updateTS)
 				}
@@ -183,15 +186,17 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 			for _, impactEndpoint := range event.ImpactEndpoints {
 				originAnormalEvents = append(originAnormalEvents, response.DescendantAnormalEventRecord{
 					EndpointKey:   impactEndpoint.EndpointKey,
+					AlertKey:      impactEndpoint.GetEventKey(),
 					AnormalType:   event.AnormalType,
-					Timestamp:     lastEventTS,
+					Timestamp:     lastEventTSBefore,
 					AnormalObject: impactEndpoint.AlertObject,
 					AnormalReason: impactEndpoint.AlertReason,
-					AnormalMsg:    impactEndpoint.AlertMessage[lastEventTS],
+					AnormalMsg:    impactEndpoint.AlertMessage[lastEventTSBefore],
 					AnormalStatus: "updatedFiring",
 				})
 			}
 		}
+
 		if isFiringAfter == model.StatusFiring {
 			for _, impactEndpoints := range event.ImpactEndpoints {
 				alertCounts, find := finalAnormalCounts[impactEndpoints.EndpointKey]
@@ -200,6 +205,20 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 					finalAnormalCounts[impactEndpoints.EndpointKey] = alertCounts
 				}
 				alertCounts[event.AnormalType]++
+			}
+
+			// 记录已经发生的告警事件和当时的状态
+			for _, impactEndpoint := range event.ImpactEndpoints {
+				finalAnrmalEvents = append(finalAnrmalEvents, response.DescendantAnormalEventRecord{
+					EndpointKey:   impactEndpoint.EndpointKey,
+					AlertKey:      impactEndpoint.GetEventKey(),
+					AnormalType:   event.AnormalType,
+					Timestamp:     lastEventTSAfter,
+					AnormalObject: impactEndpoint.AlertObject,
+					AnormalReason: impactEndpoint.AlertReason,
+					AnormalMsg:    impactEndpoint.AlertMessage[lastEventTSAfter],
+					AnormalStatus: "updatedFiring",
+				})
 			}
 		}
 
@@ -225,6 +244,7 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 
 					deltaAnormalEvents = append(deltaAnormalEvents, response.DescendantAnormalEventRecord{
 						EndpointKey:   impactEndpoint.EndpointKey,
+						AlertKey:      impactEndpoint.GetEventKey(),
 						AnormalType:   event.AnormalType,
 						Timestamp:     ts.Timestamp,
 						AnormalObject: impactEndpoint.AlertObject,
@@ -260,6 +280,7 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 
 		OriginAnormalEvents: originAnormalEvents,
 		DeltaAnormalEvents:  deltaAnormalEvents,
+		FinalAnormalEvents:  finalAnrmalEvents,
 	}, nil
 }
 
@@ -434,6 +455,7 @@ func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *I
 			}
 			errorEvent.ImpactEndpoints = append(errorEvent.ImpactEndpoints, model.AnormalEventDetail{
 				EndpointKey: endpointKey,
+				AlertKey:    model.GenUUID().String(),
 				AlertObject: propagation.NodesInstance[idx],
 				AlertReason: strings.Join(propagation.NodesErrorTypes[idx], ";"),
 				AlertMessage: map[int64]string{
@@ -491,6 +513,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 					ServiceName: alertEvent.GetServiceNameTag(),
 					ContentKey:  alertEvent.GetContentKeyTag(),
 				},
+				AlertKey:     alertEvent.AlertKey,
 				AlertObject:  alertEvent.GetTargetObj(),
 				AlertReason:  alertEvent.Name,
 				AlertMessage: alertMessage,
@@ -504,6 +527,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 			for _, endpoint := range endpoints {
 				anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
 					EndpointKey:  endpoint,
+					AlertKey:     alertEvent.AlertKey,
 					AlertObject:  alertEvent.GetTargetObj(),
 					AlertReason:  alertEvent.Name,
 					AlertMessage: alertMessage,
@@ -528,6 +552,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 			for _, endpoint := range endpoints {
 				anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
 					EndpointKey:  endpoint,
+					AlertKey:     alertEvent.AlertKey,
 					AlertObject:  alertEvent.GetTargetObj(),
 					AlertReason:  alertEvent.Name,
 					AlertMessage: alertMessage,
@@ -546,6 +571,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 				for _, endpoint := range endpoints {
 					anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
 						EndpointKey:  endpoint,
+						AlertKey:     alertEvent.AlertKey,
 						AlertObject:  instanceName + " at " + alertEvent.GetTargetObj(),
 						AlertReason:  alertEvent.Name,
 						AlertMessage: alertMessage,

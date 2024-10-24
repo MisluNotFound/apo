@@ -60,11 +60,19 @@ func (a *AlertEvent) GetLevelTag() string {
 }
 
 func (a *AlertEvent) GetNetSrcNodeTag() string {
-	return a.Tags["node"]
+	return a.Tags["node_name"]
 }
 
 func (a *AlertEvent) GetNetSrcPidTag() string {
 	return a.Tags["pid"]
+}
+
+func (a *AlertEvent) GetNetSrcPodTag() string {
+	return a.Tags["src_pod"]
+}
+
+func (a *AlertEvent) GetNetSrcNamespaceTag() string {
+	return a.Tags["src_namespace"]
 }
 
 func (a *AlertEvent) GetK8sNamespaceTag() string {

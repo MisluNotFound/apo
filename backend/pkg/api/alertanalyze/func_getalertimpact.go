@@ -11,10 +11,8 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
-	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 	"github.com/CloudDetail/apo/backend/pkg/services/serviceoverview"
-	"go.uber.org/zap"
 )
 
 // GetAlertImpact 获取告警数据的影响面
@@ -23,7 +21,7 @@ import (
 // @Tags API.alerts
 // @Accept application/x-www-form-urlencoded
 // @Produce json
-// @Param eventId query string true "查询告警事件ID"
+// @Param eventId query string false "查询告警事件ID"
 // @Param startTime query uint64 true "查询开始时间"
 // @Param endTime query uint64 true "查询结束时间"
 // @Param step query int64 true "查询步长(us)"
@@ -42,7 +40,7 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 			return
 		}
 
-		entryNodes, err := h.alertanalyzeService.AlertImpact(req.EventID, req.StartTime, req.EndTime)
+		entryNodes, events, pagation, err := h.alertanalyzeService.AlertImpact(req)
 		if err != nil {
 			var vErr model.ErrAlertImpactMissingTag
 			var vErr2 model.ErrAlertImpactNoMatchedService
@@ -84,29 +82,30 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 			)
 			return
 		}
+		resp.AlertEvents = events
+		resp.Pagination = pagation
 		c.Payload(resp)
 	}
 }
 
 // FillEntryNodeDetail 填充EntryEndpoint信息
 // 复制于 backend/pkg/api/service/func_getserviceentryendpoints.go
-func (h *handler) FillEntryNodeDetail(req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNode) (*response.GetServiceEntryEndpointsResponse, error) {
+func (h *handler) FillEntryNodeDetail(req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations) (*response.GetAlertImpactResponse, error) {
 	result := make(map[string]*response.EntryInstanceData, 0)
-	resp := response.GetServiceEntryEndpointsResponse{
-		Status: model.STATUS_NORMAL,
-		Data:   make([]*response.EntryInstanceData, 0),
+	resp := response.GetAlertImpactResponse{
+		Data: make([]*response.EntryInstanceData, 0),
 	}
 
-	threshold, err := h.serviceoverviewService.GetThreshold(database.GLOBAL, "", "")
-	if err != nil {
-		// 获取全局Threshold失败，使用默认值
-		threshold = response.GetThresholdResponse{
-			Latency:   5,
-			ErrorRate: 5,
-			Tps:       5,
-			Log:       5,
-		}
-	}
+	// threshold, err := h.serviceoverviewService.GetThreshold(database.GLOBAL, "", "")
+	// if err != nil {
+	// 	// 获取全局Threshold失败，使用默认值
+	// 	threshold = response.GetThresholdResponse{
+	// 		Latency:   5,
+	// 		ErrorRate: 5,
+	// 		Tps:       5,
+	// 		Log:       5,
+	// 	}
+	// }
 
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
@@ -137,53 +136,53 @@ func (h *handler) FillEntryNodeDetail(req *request.AlertImpactRequest, entryNode
 			}
 		}
 
-		for _, detail := range endpointResp.ServiceDetails {
-			if detail.Latency.Ratio.DayOverDay != nil && *detail.Latency.Ratio.DayOverDay > threshold.Latency {
-				resp.Status = model.STATUS_CRITICAL
-			}
-			if detail.Latency.Ratio.WeekOverDay != nil && *detail.Latency.Ratio.WeekOverDay > threshold.Latency {
-				resp.Status = model.STATUS_CRITICAL
-			}
-			if detail.ErrorRate.Ratio.DayOverDay != nil && *detail.ErrorRate.Ratio.DayOverDay > threshold.ErrorRate {
-				resp.Status = model.STATUS_CRITICAL
-			}
-			if detail.ErrorRate.Ratio.WeekOverDay != nil && *detail.ErrorRate.Ratio.WeekOverDay > threshold.ErrorRate {
-				resp.Status = model.STATUS_CRITICAL
-			}
-		}
+		// for _, detail := range endpointResp.ServiceDetails {
+		// 	if detail.Latency.Ratio.DayOverDay != nil && *detail.Latency.Ratio.DayOverDay > threshold.Latency {
+		// 		resp.Status = model.STATUS_CRITICAL
+		// 	}
+		// 	if detail.Latency.Ratio.WeekOverDay != nil && *detail.Latency.Ratio.WeekOverDay > threshold.Latency {
+		// 		resp.Status = model.STATUS_CRITICAL
+		// 	}
+		// 	if detail.ErrorRate.Ratio.DayOverDay != nil && *detail.ErrorRate.Ratio.DayOverDay > threshold.ErrorRate {
+		// 		resp.Status = model.STATUS_CRITICAL
+		// 	}
+		// 	if detail.ErrorRate.Ratio.WeekOverDay != nil && *detail.ErrorRate.Ratio.WeekOverDay > threshold.ErrorRate {
+		// 		resp.Status = model.STATUS_CRITICAL
+		// 	}
+		// }
 	}
 
-	serviceNames := make([]string, 0)
-	for serviceName := range result {
-		serviceNames = append(serviceNames, serviceName)
-	}
+	// serviceNames := make([]string, 0)
+	// for serviceName := range result {
+	// 	serviceNames = append(serviceNames, serviceName)
+	// }
 
 	// 补全日志错误数等信息
-	alertResps, err := h.serviceoverviewService.GetServicesAlert(startTime, endTime, step, serviceNames, nil)
-	if err != nil {
-		// 未能检查到状态,输出日志
-		h.logger.Error("get entryEndpoint alert error", zap.Error(err))
-	}
-	for _, alertResp := range alertResps {
-		if serviceResp, found := result[alertResp.ServiceName]; found {
-			serviceResp.Logs = alertResp.Logs
-			serviceResp.Timestamp = alertResp.Timestamp
-			serviceResp.AlertStatus = alertResp.AlertStatus
-			serviceResp.AlertReason = alertResp.AlertReason
-		}
+	// alertResps, err := h.serviceoverviewService.GetServicesAlert(startTime, endTime, step, serviceNames, nil)
+	// if err != nil {
+	// 	// 未能检查到状态,输出日志
+	// 	h.logger.Error("get entryEndpoint alert error", zap.Error(err))
+	// }
+	// for _, alertResp := range alertResps {
+	// 	if serviceResp, found := result[alertResp.ServiceName]; found {
+	// 		serviceResp.Logs = alertResp.Logs
+	// 		serviceResp.Timestamp = alertResp.Timestamp
+	// 		serviceResp.AlertStatus = alertResp.AlertStatus
+	// 		serviceResp.AlertReason = alertResp.AlertReason
+	// 	}
 
-		if alertResp.Logs.Ratio.DayOverDay != nil && *alertResp.Logs.Ratio.DayOverDay > threshold.Log {
-			resp.Status = model.STATUS_CRITICAL
-		}
-		if alertResp.Logs.Ratio.WeekOverDay != nil && *alertResp.Logs.Ratio.WeekOverDay > threshold.Log {
-			resp.Status = model.STATUS_CRITICAL
-		}
-		if alertResp.AlertStatusCH.InfrastructureStatus == model.STATUS_CRITICAL ||
-			alertResp.AlertStatusCH.NetStatus == model.STATUS_CRITICAL ||
-			alertResp.AlertStatusCH.K8sStatus == model.STATUS_CRITICAL {
-			resp.Status = model.STATUS_CRITICAL
-		}
-	}
+	// 	if alertResp.Logs.Ratio.DayOverDay != nil && *alertResp.Logs.Ratio.DayOverDay > threshold.Log {
+	// 		resp.Status = model.STATUS_CRITICAL
+	// 	}
+	// 	if alertResp.Logs.Ratio.WeekOverDay != nil && *alertResp.Logs.Ratio.WeekOverDay > threshold.Log {
+	// 		resp.Status = model.STATUS_CRITICAL
+	// 	}
+	// 	if alertResp.AlertStatusCH.InfrastructureStatus == model.STATUS_CRITICAL ||
+	// 		alertResp.AlertStatusCH.NetStatus == model.STATUS_CRITICAL ||
+	// 		alertResp.AlertStatusCH.K8sStatus == model.STATUS_CRITICAL {
+	// 		resp.Status = model.STATUS_CRITICAL
+	// 	}
+	// }
 
 	for _, endpointsResp := range result {
 		resp.Data = append(resp.Data, endpointsResp)
