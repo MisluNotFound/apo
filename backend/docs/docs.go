@@ -177,6 +177,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/anomaly-span/list": {
+            "post": {
+                "description": "获取服务和根因类型的故障报告",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alert"
+                ],
+                "summary": "获取服务和根因类型的故障报告",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetAnomalySpanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetAnomalySpanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/descendant/anormal/contribution": {
             "get": {
                 "description": "获取下游故障贡献度",
@@ -1907,46 +1947,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.GetAlertEventsSampleResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/code.Failure"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/service/anomaly-span/list": {
-            "post": {
-                "description": "获取服务和根因类型的故障报告",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "API.alert"
-                ],
-                "summary": "获取服务和根因类型的故障报告",
-                "parameters": [
-                    {
-                        "description": "请求信息",
-                        "name": "Request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.GetAnomalySpanRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.GetAnomalySpanResponse"
                         }
                     },
                     "400": {
@@ -4620,6 +4620,17 @@ const docTemplate = `{
                 }
             }
         },
+        "model.EndpointKey": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                }
+            }
+        },
         "model.ModifyTableTTLMap": {
             "type": "object",
             "properties": {
@@ -4703,20 +4714,6 @@ const docTemplate = `{
                 "StatusResolved",
                 "StatusFiring"
             ]
-        },
-        "polarisanalyzer.LatencyRelevance": {
-            "type": "object",
-            "properties": {
-                "endpoint": {
-                    "type": "string"
-                },
-                "relevance": {
-                    "type": "number"
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
         },
         "prometheus.MetricsPoint": {
             "type": "object",
@@ -5933,7 +5930,7 @@ const docTemplate = `{
                     "description": "延时曲线相似度前三的节点",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/polarisanalyzer.LatencyRelevance"
+                        "$ref": "#/definitions/model.EndpointKey"
                     }
                 }
             }

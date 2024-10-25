@@ -35,8 +35,8 @@ type Handler interface {
 	GetDescendantAnormalDelta() core.HandlerFunc
 
 	// GetAnomalySpan 获取服务和根因类型的故障报告
-	// @Tags API.alert
-	// @Router /api/service/anomaly-span/list [post]
+	// @Tags API.alerts
+	// @Router /api/alerts/anomaly-span/list [post]
 	GetAnomalySpan() core.HandlerFunc
 }
 

@@ -122,7 +122,7 @@ func setApiRouter(r *resource) {
 		alertApi.GET("/descendant/anormal/contribution", alertanalyzeHandler.GetDescendantContribution())
 		alertApi.GET("/descendant/anormal/list", alertanalyzeHandler.GetDescendantAnormal())
 		alertApi.POST("/descendant/anormal/delta", alertanalyzeHandler.GetDescendantAnormalDelta())
-		serviceApi.POST("/anomaly-span/list", alertanalyzeHandler.GetAnomalySpan())
+		alertApi.POST("/anomaly-span/list", alertanalyzeHandler.GetAnomalySpan())
 	}
 
 	configApi := r.mux.Group("/api/config")

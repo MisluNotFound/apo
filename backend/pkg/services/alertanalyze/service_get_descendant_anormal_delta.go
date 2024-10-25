@@ -114,7 +114,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		ChartData: map[int64]float64{},
 	}
 	// 初始化
-	for i := req.StartTime; i < req.EndTime; i += req.Step {
+	for i := req.StartTime; i <= req.EndTime; i += req.Step {
 		anormalCount.ChartData[i] = 0
 	}
 
@@ -142,8 +142,8 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 					startFiring = updateTS.Timestamp
 				}
 				for ts, count := range anormalCount.ChartData {
-					if ts+req.Step >= startFiring {
-						anormalCount.ChartData[ts] = count + 1
+					if ts >= startFiring {
+						anormalCount.ChartData[ts] = count + float64(len(event.ImpactEndpoints))
 					}
 				}
 			} else if startFiring == -1 && updateTS.AnormalStatus == model.StatusFiring {
@@ -152,8 +152,8 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			} else if startFiring != -1 && updateTS.AnormalStatus == model.StatusResolved {
 				// 结算之前的告警
 				for ts, count := range anormalCount.ChartData {
-					if ts+req.Step >= startFiring && ts+req.Step < updateTS.Timestamp {
-						anormalCount.ChartData[ts] = count + 1
+					if ts >= startFiring && ts < updateTS.Timestamp {
+						anormalCount.ChartData[ts] = count + float64(len(event.ImpactEndpoints))
 					}
 				}
 			}

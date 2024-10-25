@@ -67,7 +67,7 @@ func (s *service) GetAlertEvents(req *request.GetAlertEventsRequest) (*response.
 	endTime := time.UnixMicro(req.EndTime)
 
 	if len(req.SortBy) == 0 {
-		req.SortBy = clickhouse.OrderAlertByGroupName
+		req.SortBy = clickhouse.OrderAlertByReceivedTime
 	}
 
 	// 查询实例的AlertEvent

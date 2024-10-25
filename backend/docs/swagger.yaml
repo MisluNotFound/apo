@@ -524,6 +524,13 @@ definitions:
         $ref: '#/definitions/model.AlertDetail'
       type: array
     type: object
+  model.EndpointKey:
+    properties:
+      endpoint:
+        type: string
+      serviceName:
+        type: string
+    type: object
   model.ModifyTableTTLMap:
     properties:
       TTLExpression:
@@ -585,15 +592,6 @@ definitions:
     x-enum-varnames:
     - StatusResolved
     - StatusFiring
-  polarisanalyzer.LatencyRelevance:
-    properties:
-      endpoint:
-        type: string
-      relevance:
-        type: number
-      service:
-        type: string
-    type: object
   prometheus.MetricsPoint:
     properties:
       timestamp:
@@ -1420,7 +1418,7 @@ definitions:
       latencyContributationList:
         description: 延时曲线相似度前三的节点
         items:
-          $ref: '#/definitions/polarisanalyzer.LatencyRelevance'
+          $ref: '#/definitions/model.EndpointKey'
         type: array
     type: object
   response.GetDescendantAnormalEventResponse:
@@ -2288,6 +2286,32 @@ paths:
       summary: 列出告警通知对象
       tags:
       - API.alerts
+  /api/alerts/anomaly-span/list:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取服务和根因类型的故障报告
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetAnomalySpanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetAnomalySpanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取服务和根因类型的故障报告
+      tags:
+      - API.alert
   /api/alerts/descendant/anormal/contribution:
     get:
       consumes:
@@ -3435,32 +3459,6 @@ paths:
       summary: 获取采样告警事件
       tags:
       - API.service
-  /api/service/anomaly-span/list:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 获取服务和根因类型的故障报告
-      parameters:
-      - description: 请求信息
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/request.GetAnomalySpanRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.GetAnomalySpanResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 获取服务和根因类型的故障报告
-      tags:
-      - API.alert
   /api/service/descendant/metrics:
     get:
       consumes:

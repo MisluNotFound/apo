@@ -26,7 +26,7 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 	}
 
 	// eventId为空,获取所有的告警
-	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{}, nil, nil, "")
+	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{}, nil, nil, clickhouse.OrderAlertByReceivedTime)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -226,10 +226,10 @@ func searchEntryRelations(relations []clickhouse.EntryNodeRelations, endpoints [
 
 func tryGetAlertService(repo prometheus.Repo, endpointsMap *EndpointsMap, event *model.AlertEvent, startTime time.Time, endTime time.Time) ([]clickhouse.AlertService, error) {
 	var tryMethods = []func(prometheus.Repo, *EndpointsMap, *model.AlertEvent, time.Time, time.Time) ([]clickhouse.AlertService, error){
-		tryGetAlertServiceByNetSrcVM,
-		tryGetAlertServiceByContainer,
 		tryGetAlertServiceByNetK8s,
+		tryGetAlertServiceByContainer,
 		tryGetAlertServiceByService,
+		tryGetAlertServiceByNetSrcVM,
 		tryGetAlertServiceByInfraNode,
 	}
 	var endpoints []clickhouse.AlertService

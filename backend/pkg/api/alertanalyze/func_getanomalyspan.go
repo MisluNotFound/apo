@@ -18,7 +18,7 @@ import (
 // @Param Request body request.GetAnomalySpanRequest true "请求信息"
 // @Success 200 {object} response.GetAnomalySpanResponse
 // @Failure 400 {object} code.Failure
-// @Router /api/service/anomaly-span/list [post]
+// @Router /api/alerts/anomaly-span/list [post]
 func (h *handler) GetAnomalySpan() core.HandlerFunc {
 	return func(c core.Context) {
 		req := new(request.GetAnomalySpanRequest)
