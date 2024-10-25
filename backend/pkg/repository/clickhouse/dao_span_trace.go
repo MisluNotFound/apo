@@ -472,7 +472,7 @@ func (ch *chRepo) GetAnomalyTrace(req *request.GetAnomalySpanRequest) ([]QueryTr
 	querySql := queryBuilder.String()
 
 	// 构造select
-	fieldSql := `trace_id, threshold_value, labels['mutated_type'] as reason,
+	fieldSql := `trace_id, threshold_value / 1000, labels['mutated_type'] as reason,
 		apm_span_id as span_id, intDiv(toUnixTimestamp64Nano(timestamp), 1000) as ts, 
 		intDiv(duration, 1000) as duration_us, metrics, flags['is_error'] as is_error, flags['is_slow'] as is_slow`
 
