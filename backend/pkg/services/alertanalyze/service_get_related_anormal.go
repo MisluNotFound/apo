@@ -22,7 +22,14 @@ func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventReq
 	}
 
 	// 先查询入口节点的下游节点
-	nodes, err := s.chRepo.ListDescendantNodes(&req.GetDescendantMetricsRequest)
+	nodes, err := s.chRepo.ListDescendantNodes(&request.GetDescendantMetricsRequest{
+		StartTime:     req.StartTime,
+		EndTime:       req.EndTime,
+		Service:       req.Service,
+		Endpoint:      req.Endpoint,
+		EntryService:  req.EntryService,
+		EntryEndpoint: req.EntryEndpoint,
+	})
 	if err != nil {
 		return &response.GetDescendantAnormalEventResponse{}, err
 	}
@@ -54,7 +61,7 @@ func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventReq
 	events, count, err := s.chRepo.GetAlertEventsByInstanceAndEndpoints(startTime, endTime,
 		request.AlertFilter{Status: "firing"},
 		instances, endpointList, req.PageParam,
-		clickhouse.ReceivedTimeOrders,
+		clickhouse.OrderAlertByReceivedTime,
 	)
 
 	// TODO 告警事件关联到影响服务

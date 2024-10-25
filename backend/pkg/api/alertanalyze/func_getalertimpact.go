@@ -40,7 +40,7 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 			return
 		}
 
-		entryNodes, events, pagation, err := h.alertanalyzeService.AlertImpact(req)
+		entryNodes, events, relatedEventCounts, pagation, err := h.alertanalyzeService.AlertImpact(req)
 		if err != nil {
 			var vErr model.ErrAlertImpactMissingTag
 			var vErr2 model.ErrAlertImpactNoMatchedService
@@ -72,7 +72,7 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 		}
 
 		// 填充EntryEndpoint信息
-		resp, err := fillEntryNodeDetail(h.serviceoverviewService, req, entryNodes)
+		resp, err := fillEntryNodeDetail(h.serviceoverviewService, req, entryNodes, relatedEventCounts)
 		if err != nil {
 			// 查询失败
 			c.AbortWithError(core.Error(
@@ -82,15 +82,33 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 			)
 			return
 		}
+
+		fillRelatedAlertRate(resp, relatedEventCounts, pagation)
+
 		resp.AlertEvents = events
 		resp.Pagination = pagation
 		c.Payload(resp)
 	}
 }
 
+func fillRelatedAlertRate(resp *response.GetAlertImpactResponse, relatedEventCounts map[model.EndpointKey]int, pagation *model.Pagination) {
+	for _, entryEndpoint := range resp.Data {
+		key := model.EndpointKey{
+			ServiceName: entryEndpoint.ServiceName,
+			ContentKey:  entryEndpoint.Endpoint,
+		}
+		relatedAlertCount, find := relatedEventCounts[key]
+		if find {
+			entryEndpoint.RelatedAlertRate = float64(relatedAlertCount) * 100 / float64(pagation.Total)
+		} else {
+			entryEndpoint.RelatedAlertRate = 0
+		}
+	}
+}
+
 // fillEntryNodeDetail 填充EntryEndpoint信息
 // 复制于 backend/pkg/api/service/func_getserviceentryendpoints.go
-func fillEntryNodeDetail(s serviceoverview.Service, req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations) (*response.GetAlertImpactResponse, error) {
+func fillEntryNodeDetail(s serviceoverview.Service, req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations, relatedEventCounts map[model.EndpointKey]int) (*response.GetAlertImpactResponse, error) {
 	resp := response.GetAlertImpactResponse{
 		Data: make([]*response.EndpointData, 0),
 	}

@@ -294,6 +294,8 @@ type EndpointData struct {
 	Namespaces  []string `json:"namespaces,omitempty"` // 应用所属命名空间,可能为空
 
 	ServiceDetail
+
+	RelatedAlertRate float64 `json:"relatedAlertRate"`
 }
 
 func (entryInstanceData *EntryInstanceData) AddNamespaces(namespaces []string) {

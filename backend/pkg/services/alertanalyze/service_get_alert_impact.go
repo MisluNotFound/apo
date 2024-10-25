@@ -13,23 +13,22 @@ import (
 )
 
 // AlertImpact 分析告警事件的影响面
-// 1. 根据告警时间类型找到关联的Service,
-// !!! 会检查Event中是否有满足要求的Label,如果没有会尝试所有预设的label组合
+// 1. 根据告警时间类型找到关联的Service,会检查Event中是否有满足要求的Label,如果没有会尝试所有预设的label组合
 // 2. 通过ServiceTopology查询service的关联入口
-func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.EntryNodeRelations, []response.ImpactAlertEvent, *model.Pagination, error) {
+func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.EntryNodeRelations, []response.ImpactAlertEvent, map[model.EndpointKey]int, *model.Pagination, error) {
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
 
 	// 从Clickhouse中获取到所有的告警
 	if req.EventID != "" {
 		entrys, err := s.alertImpactTargetEvent(req.EventID, startTime, endTime)
-		return entrys, nil, nil, err
+		return entrys, nil, nil, nil, err
 	}
 
 	// eventId为空,获取所有的告警
 	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{}, nil, nil, "")
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	endpointsMap := EndpointsMap{
@@ -61,19 +60,19 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 
 	endpoints := endpointsMap.EndpointsList()
 
-	// 关联入口和Endpoints
+	// 查询入口和下游服务节点的关联
 	entryRelation, err := s.chRepo.SearchEntryEndpointsByAlertService(endpoints, startTime.UnixMicro(), endTime.UnixMicro())
 	if err != nil {
-		pagation, eventList, _ := pagationAndFillEntry(req, count, impactEvents, nil)
-		return entryRelation, eventList, pagation, err
+		pagation, eventList, _, _ := addRelatedEntryAndPagation(req, count, impactEvents, nil)
+		return entryRelation, eventList, nil, pagation, err
 	}
 
-	// 分页(只做分页内的告警事件的入口关联)
-	pagation, eventList, err := pagationAndFillEntry(req, count, impactEvents, entryRelation)
-	return entryRelation, eventList, pagation, err
+	// 关联告警并分页
+	pagation, eventList, relatedEventCounts, err := addRelatedEntryAndPagation(req, count, impactEvents, entryRelation)
+	return entryRelation, eventList, relatedEventCounts, pagation, err
 }
 
-func pagationAndFillEntry(req *request.AlertImpactRequest, count int, impactEvents []response.ImpactAlertEvent, entryRelation []clickhouse.EntryNodeRelations) (*model.Pagination, []response.ImpactAlertEvent, error) {
+func addRelatedEntryAndPagation(req *request.AlertImpactRequest, count int, impactEvents []response.ImpactAlertEvent, entryRelation []clickhouse.EntryNodeRelations) (*model.Pagination, []response.ImpactAlertEvent, map[model.EndpointKey]int, error) {
 	if req.PageParam == nil {
 		// 按0,999分页
 		req.PageParam = &request.PageParam{
@@ -91,16 +90,25 @@ func pagationAndFillEntry(req *request.AlertImpactRequest, count int, impactEven
 	from = (req.PageParam.CurrentPage - 1) * req.PageParam.PageSize
 	to = req.PageParam.CurrentPage * req.PageParam.PageSize
 	if from > len(impactEvents) {
-		return pagation, nil, fmt.Errorf("page out of range")
+		return pagation, nil, nil, fmt.Errorf("page out of range")
 	}
 	if to > len(impactEvents) {
 		to = len(impactEvents)
 	}
 
-	for i := from; i < to; i++ {
-		impactEvents[i].ImpactEntrys = searchEntryRelations(entryRelation, impactEvents[i].ImpactEndpoints)
+	var relatedEventCount = make(map[model.EndpointKey]int)
+	for i := from; i < count; i++ {
+		// 查询和事件关联的入口
+		impactEntrys := searchEntryRelations(entryRelation, impactEvents[i].ImpactEndpoints)
+		// 统计入口关联的告警数量
+		for _, impactEntry := range impactEntrys {
+			relatedEventCount[impactEntry]++
+		}
+		if i < to {
+			impactEvents[i].ImpactEntrys = impactEntrys
+		}
 	}
-	return pagation, impactEvents[from:to], nil
+	return pagation, impactEvents[from:to], relatedEventCount, nil
 }
 
 func (s *service) alertImpactTargetEvent(eventid string, startTime, endTime time.Time) ([]clickhouse.EntryNodeRelations, error) {
@@ -195,15 +203,18 @@ func searchEntryRelations(relations []clickhouse.EntryNodeRelations, endpoints [
 	var entryList = make([]model.EndpointKey, 0)
 	for _, relation := range relations {
 		for _, endpoint := range endpoints {
-			if relation.DescendantEndpoint != endpoint.ContentKey ||
-				relation.DescendantService == endpoint.ServiceName {
+			// endpoint.ContentKey 为空表示整个服务都收到该Alert的影响
+			if len(endpoint.ContentKey) > 0 && endpoint.ContentKey != relation.DescendantEndpoint {
+				continue
+			}
+			if endpoint.ServiceName != relation.DescendantService {
 				continue
 			}
 			entryKey := model.EndpointKey{
 				ServiceName: relation.Service,
 				ContentKey:  relation.Endpoint,
 			}
-			if _, find := tmpEntrySet[entryKey]; !find {
+			if _, find := tmpEntrySet[entryKey]; find {
 				continue
 			}
 			tmpEntrySet[entryKey] = struct{}{}
