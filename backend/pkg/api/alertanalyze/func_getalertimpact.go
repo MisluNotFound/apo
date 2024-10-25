@@ -72,7 +72,7 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 		}
 
 		// 填充EntryEndpoint信息
-		resp, err := h.FillEntryNodeDetail(req, entryNodes)
+		resp, err := fillEntryNodeDetail(h.serviceoverviewService, req, entryNodes)
 		if err != nil {
 			// 查询失败
 			c.AbortWithError(core.Error(
@@ -88,104 +88,45 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 	}
 }
 
-// FillEntryNodeDetail 填充EntryEndpoint信息
+// fillEntryNodeDetail 填充EntryEndpoint信息
 // 复制于 backend/pkg/api/service/func_getserviceentryendpoints.go
-func (h *handler) FillEntryNodeDetail(req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations) (*response.GetAlertImpactResponse, error) {
-	result := make(map[string]*response.EntryInstanceData, 0)
+func fillEntryNodeDetail(s serviceoverview.Service, req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations) (*response.GetAlertImpactResponse, error) {
 	resp := response.GetAlertImpactResponse{
-		Data: make([]*response.EntryInstanceData, 0),
+		Data: make([]*response.EndpointData, 0),
 	}
-
-	// threshold, err := h.serviceoverviewService.GetThreshold(database.GLOBAL, "", "")
-	// if err != nil {
-	// 	// 获取全局Threshold失败，使用默认值
-	// 	threshold = response.GetThresholdResponse{
-	// 		Latency:   5,
-	// 		ErrorRate: 5,
-	// 		Tps:       5,
-	// 		Log:       5,
-	// 	}
-	// }
 
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
 	sortRule := serviceoverview.DODThreshold
 	step := time.Duration(req.Step * 1000)
 
+	endpointsSet := map[prometheus.EndpointKey]struct{}{}
 	endpoints := make([]prometheus.EndpointKey, 0)
 	for _, entryNode := range entryNodes {
-		endpoints = append(endpoints, prometheus.EndpointKey{SvcName: entryNode.Service, ContentKey: entryNode.Endpoint})
+		entryEndpointKey := prometheus.EndpointKey{SvcName: entryNode.Service, ContentKey: entryNode.Endpoint}
+		if _, find := endpointsSet[entryEndpointKey]; find {
+			continue
+		}
+
+		endpointsSet[entryEndpointKey] = struct{}{}
+		endpoints = append(endpoints, entryEndpointKey)
 	}
 
-	endpointResps, err := h.serviceoverviewService.GetServicesEndpointDataByEndpoints(startTime, endTime, step, endpoints, sortRule)
+	endpointResps, err := s.GetServicesEndpointDataByEndpoints(startTime, endTime, step, endpoints, sortRule)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, endpointResp := range endpointResps {
-		if serviceResp, found := result[endpointResp.ServiceName]; found {
-			serviceResp.Namespaces = endpointResp.Namespaces
-			serviceResp.EndpointCount += endpointResp.EndpointCount
-			serviceResp.AddNamespaces(endpointResp.Namespaces)
-		} else {
-			result[endpointResp.ServiceName] = &response.EntryInstanceData{
-				ServiceName:    endpointResp.ServiceName,
-				Namespaces:     endpointResp.Namespaces,
-				EndpointCount:  endpointResp.EndpointCount,
-				ServiceDetails: endpointResp.ServiceDetails,
-			}
+		if len(endpointResp.ServiceDetails) == 0 {
+			continue
 		}
-
-		// for _, detail := range endpointResp.ServiceDetails {
-		// 	if detail.Latency.Ratio.DayOverDay != nil && *detail.Latency.Ratio.DayOverDay > threshold.Latency {
-		// 		resp.Status = model.STATUS_CRITICAL
-		// 	}
-		// 	if detail.Latency.Ratio.WeekOverDay != nil && *detail.Latency.Ratio.WeekOverDay > threshold.Latency {
-		// 		resp.Status = model.STATUS_CRITICAL
-		// 	}
-		// 	if detail.ErrorRate.Ratio.DayOverDay != nil && *detail.ErrorRate.Ratio.DayOverDay > threshold.ErrorRate {
-		// 		resp.Status = model.STATUS_CRITICAL
-		// 	}
-		// 	if detail.ErrorRate.Ratio.WeekOverDay != nil && *detail.ErrorRate.Ratio.WeekOverDay > threshold.ErrorRate {
-		// 		resp.Status = model.STATUS_CRITICAL
-		// 	}
-		// }
+		resp.Data = append(resp.Data, &response.EndpointData{
+			ServiceName:   endpointResp.ServiceName,
+			Namespaces:    []string{},
+			ServiceDetail: endpointResp.ServiceDetails[0],
+		})
 	}
 
-	// serviceNames := make([]string, 0)
-	// for serviceName := range result {
-	// 	serviceNames = append(serviceNames, serviceName)
-	// }
-
-	// 补全日志错误数等信息
-	// alertResps, err := h.serviceoverviewService.GetServicesAlert(startTime, endTime, step, serviceNames, nil)
-	// if err != nil {
-	// 	// 未能检查到状态,输出日志
-	// 	h.logger.Error("get entryEndpoint alert error", zap.Error(err))
-	// }
-	// for _, alertResp := range alertResps {
-	// 	if serviceResp, found := result[alertResp.ServiceName]; found {
-	// 		serviceResp.Logs = alertResp.Logs
-	// 		serviceResp.Timestamp = alertResp.Timestamp
-	// 		serviceResp.AlertStatus = alertResp.AlertStatus
-	// 		serviceResp.AlertReason = alertResp.AlertReason
-	// 	}
-
-	// 	if alertResp.Logs.Ratio.DayOverDay != nil && *alertResp.Logs.Ratio.DayOverDay > threshold.Log {
-	// 		resp.Status = model.STATUS_CRITICAL
-	// 	}
-	// 	if alertResp.Logs.Ratio.WeekOverDay != nil && *alertResp.Logs.Ratio.WeekOverDay > threshold.Log {
-	// 		resp.Status = model.STATUS_CRITICAL
-	// 	}
-	// 	if alertResp.AlertStatusCH.InfrastructureStatus == model.STATUS_CRITICAL ||
-	// 		alertResp.AlertStatusCH.NetStatus == model.STATUS_CRITICAL ||
-	// 		alertResp.AlertStatusCH.K8sStatus == model.STATUS_CRITICAL {
-	// 		resp.Status = model.STATUS_CRITICAL
-	// 	}
-	// }
-
-	for _, endpointsResp := range result {
-		resp.Data = append(resp.Data, endpointsResp)
-	}
 	return &resp, nil
 }

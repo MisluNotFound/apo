@@ -177,7 +177,6 @@ func (ch *chRepo) GetAlertEvents(startTime time.Time, endTime time.Time, filter 
 // instances为空时,不返回任何告警
 func (ch *chRepo) GetAlertEventsByInstanceAndEndpoints(startTime time.Time, endTime time.Time, filter request.AlertFilter, instances []*model.ServiceInstance, endpoints []model.EndpointKey, pageParam *request.PageParam, sortBy string) ([]PagedAlertEvent, int, error) {
 	whereInstance := extractFilter(filter, endpoints, instances)
-	// TODO 改用 AlertEventWithKey
 	return ch.getAlertEventsByWhere(startTime, endTime, filter, whereInstance, sortBy, pageParam)
 }
 

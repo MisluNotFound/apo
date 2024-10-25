@@ -287,6 +287,24 @@ func sortByMutation(endpoints []*prom.EndpointMetrics) {
 
 }
 
+func fillEndpoints(endpoints []*prom.EndpointMetrics) []ServiceDetail {
+	var services []ServiceDetail
+	for _, url := range endpoints {
+		//如果没有数据则不返回
+		if (url.REDMetrics.Avg.Latency == nil && url.REDMetrics.Avg.ErrorRate == nil) || (url.REDMetrics.Avg.Latency == nil && url.REDMetrics.Avg.ErrorRate != nil && *url.REDMetrics.Avg.ErrorRate == 0 && url.REDMetrics.Avg.TPM == nil) {
+			continue
+		}
+		newService := ServiceDetail{
+			ServiceName:   url.SvcName,
+			ServiceSize:   1,
+			EndpointCount: 1,
+			Endpoints:     []*prom.EndpointMetrics{url},
+		}
+		services = append(services, newService)
+	}
+	return services
+}
+
 func fillServices(endpoints []*prom.EndpointMetrics) []ServiceDetail {
 	var services []ServiceDetail
 	for _, url := range endpoints {

@@ -257,7 +257,7 @@ type GetServiceEntryEndpointsResponse struct {
 }
 
 type GetAlertImpactResponse struct {
-	Data []*EntryInstanceData `json:"data"`
+	Data []*EndpointData `json:"data"`
 
 	AlertEvents []ImpactAlertEvent `json:"alertEvents"`
 	// 告警事件分页
@@ -272,6 +272,11 @@ type ImpactAlertEvent struct {
 	ImpactEntrys    []model.EndpointKey       `json:"impactEntrys"`
 }
 
+type GetDescendantAlertContributationResponse struct {
+	// 延时曲线相似度前三的节点
+	LatencyContributationList []polarisanalyzer.LatencyRelevance `json:"latencyContributationList"`
+}
+
 type EntryInstanceData struct {
 	ServiceName    string          `json:"serviceName"`
 	Namespaces     []string        `json:"namespaces"` // 应用所属命名空间,可能为空
@@ -282,6 +287,13 @@ type EntryInstanceData struct {
 	Timestamp *int64          `json:"timestamp"`
 	model.AlertStatus
 	AlertReason model.AlertReason `json:"alertReason"`
+}
+
+type EndpointData struct {
+	ServiceName string   `json:"serviceName"`
+	Namespaces  []string `json:"namespaces,omitempty"` // 应用所属命名空间,可能为空
+
+	ServiceDetail
 }
 
 func (entryInstanceData *EntryInstanceData) AddNamespaces(namespaces []string) {

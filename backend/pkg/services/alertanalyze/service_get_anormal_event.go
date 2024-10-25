@@ -18,8 +18,8 @@ const (
 	mutationEvent    = "mutation"
 )
 
-// SearchAnormalEventByEntry 基于入口查询异常事件
-func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEventRequest) (*response.GetDescendantAnormalEventResponse, error) {
+// SearchAnormalDeltaByEntry 基于入口查询异常事件
+func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDeltaEventRequest) (*response.GetDescendantDeltaAnormalEventResponse, error) {
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
 
@@ -273,7 +273,7 @@ func (s *service) SearchAnormalEventByEntry(req *request.GetDescendantAnormalEve
 		})
 	}
 
-	return &response.GetDescendantAnormalEventResponse{
+	return &response.GetDescendantDeltaAnormalEventResponse{
 		AnormalCount:        anormalCount,
 		OriginAnormalCounts: originAnormalCountsList,
 		FinalAnormalCounts:  finalAnormalCountsList,

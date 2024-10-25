@@ -45,7 +45,7 @@ func (h *handler) GetAnomalySpan() core.HandlerFunc {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.GetAnomalySpanError,
-				code.Text(code.GetAnomalySpanError)))
+				code.Text(code.GetAnomalySpanError)).WithError(err))
 			return
 		}
 		c.Payload(resp)

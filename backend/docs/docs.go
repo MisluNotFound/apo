@@ -177,6 +177,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/descendant/anormal/contribution": {
+            "get": {
+                "description": "获取下游故障贡献度",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取下游故障贡献度",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "查询开始时间",
+                        "name": "startTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "查询结束时间",
+                        "name": "endTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询服务名",
+                        "name": "service",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询Endpoint",
+                        "name": "endpoint",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "查询步长(us)",
+                        "name": "step",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "入口服务名",
+                        "name": "entryService",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "入口Endpoint",
+                        "name": "entryEndpoint",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetDescendantAlertContributationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/descendant/anormal/delta": {
             "post": {
                 "description": "获取下游告警事件",
@@ -232,6 +310,77 @@ const docTemplate = `{
                         "name": "anormalTypes",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetDescendantAnormalEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/descendant/anormal/list": {
+            "get": {
+                "description": "获取下游告警事件",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取下游告警事件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "查询开始时间",
+                        "name": "startTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "查询结束时间",
+                        "name": "endTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询服务名",
+                        "name": "service",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询Endpoint",
+                        "name": "endpoint",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "入口服务名",
+                        "name": "entryService",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "入口Endpoint",
+                        "name": "entryEndpoint",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4103,27 +4252,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.AnormalType": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6
-            ],
-            "x-enum-varnames": [
-                "AnormalTypeUnknown",
-                "AnormalTypeAlertApp",
-                "AnormalTypeAlertContainer",
-                "AnormalTypeAlertInfra",
-                "AnormalTypeAlertNet",
-                "AnormalTypeError",
-                "AnormalTypeMutation"
-            ]
-        },
         "model.ModifyTableTTLMap": {
             "type": "object",
             "properties": {
@@ -4207,6 +4335,20 @@ const docTemplate = `{
                 "StatusResolved",
                 "StatusFiring"
             ]
+        },
+        "polarisanalyzer.LatencyRelevance": {
+            "type": "object",
+            "properties": {
+                "endpoint": {
+                    "type": "string"
+                },
+                "relevance": {
+                    "type": "number"
+                },
+                "service": {
+                    "type": "string"
+                }
+            }
         },
         "prometheus.MetricsPoint": {
             "type": "object",
@@ -4927,56 +5069,6 @@ const docTemplate = `{
                 }
             }
         },
-        "response.DescendantAnormalCounts": {
-            "type": "object",
-            "properties": {
-                "anormalCounts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "contentKey": {
-                    "type": "string"
-                },
-                "serviceName": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.DescendantAnormalEventRecord": {
-            "type": "object",
-            "properties": {
-                "alertKey": {
-                    "type": "string"
-                },
-                "anormalMsg": {
-                    "type": "string"
-                },
-                "anormalObject": {
-                    "type": "string"
-                },
-                "anormalReason": {
-                    "type": "string"
-                },
-                "anormalStatus": {
-                    "description": "startFiring / updatedFiring / resolved",
-                    "type": "string"
-                },
-                "anormalType": {
-                    "$ref": "#/definitions/model.AnormalType"
-                },
-                "contentKey": {
-                    "type": "string"
-                },
-                "serviceName": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "integer"
-                }
-            }
-        },
         "response.DetailResponse": {
             "type": "object",
             "properties": {
@@ -5222,46 +5314,29 @@ const docTemplate = `{
                 }
             }
         },
+        "response.GetDescendantAlertContributationResponse": {
+            "type": "object",
+            "properties": {
+                "latencyContributationList": {
+                    "description": "延时曲线相似度前三的节点",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/polarisanalyzer.LatencyRelevance"
+                    }
+                }
+            }
+        },
         "response.GetDescendantAnormalEventResponse": {
             "type": "object",
             "properties": {
-                "anormalCount": {
-                    "description": "AnormalEvents []model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `\nAnormalEvents map[int64][]model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/response.TempChartObject"
-                        }
-                    ]
-                },
-                "deltaAnormalEvents": {
+                "alertEvents": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
+                        "$ref": "#/definitions/clickhouse.PagedAlertEvent"
                     }
                 },
-                "finalAnormalCounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.DescendantAnormalCounts"
-                    }
-                },
-                "finalAnormalEvents": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
-                    }
-                },
-                "originAnormalCounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.DescendantAnormalCounts"
-                    }
-                },
-                "originAnormalEvents": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
-                    }
+                "pagination": {
+                    "$ref": "#/definitions/model.Pagination"
                 }
             }
         },

@@ -11,7 +11,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 )
 
-// GetDescendantAnormalEvent 获取下游告警事件
+// GetDescendantAnormalDelta 获取下游告警事件
 // @Summary 获取下游告警事件
 // @Description 获取下游告警事件
 // @Tags API.alerts
@@ -26,9 +26,9 @@ import (
 // @Success 200 {object} response.GetDescendantAnormalEventResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/alerts/descendant/anormal/delta [post]
-func (h *handler) GetDescendantAnormalEvent() core.HandlerFunc {
+func (h *handler) GetDescendantAnormalDelta() core.HandlerFunc {
 	return func(c core.Context) {
-		req := new(request.GetDescendantAnormalEventRequest)
+		req := new(request.GetDescendantAnormalDeltaEventRequest)
 		if err := c.ShouldBindJSON(req); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
@@ -38,7 +38,7 @@ func (h *handler) GetDescendantAnormalEvent() core.HandlerFunc {
 			return
 		}
 
-		resp, err := h.alertanalyzeService.SearchAnormalEventByEntry(req)
+		resp, err := h.alertanalyzeService.SearchAnormalDeltaByEntry(req)
 		if err != nil {
 			var vErr model.ErrMutationCheckFailed
 			if errors.As(err, &vErr) {
@@ -51,8 +51,8 @@ func (h *handler) GetDescendantAnormalEvent() core.HandlerFunc {
 			} else {
 				c.AbortWithError(core.Error(
 					http.StatusBadRequest,
-					code.AlertAnalyzeDescendantAnormalEventError,
-					code.Text(code.AlertAnalyzeDescendantAnormalEventError),
+					code.AlertAnalyzeDescendantAnormalEventDeltaError,
+					code.Text(code.AlertAnalyzeDescendantAnormalEventDeltaError),
 				).WithError(err))
 				return
 			}

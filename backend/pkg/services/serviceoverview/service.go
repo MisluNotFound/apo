@@ -20,7 +20,6 @@ type Service interface {
 	GetServicesEndpointDataByFilter(startTime time.Time, endTime time.Time, step time.Duration, filter EndpointsFilter, sortRule SortType) (res []response.ServiceEndPointsRes, err error)
 
 	GetServicesEndpointDataByEndpoints(startTime, endTime time.Time, step time.Duration, endpoints []prom.EndpointKey, sortRule SortType) (res []response.ServiceEndPointsRes, err error)
-
 	GetServicesRYGLightStatus(startTime time.Time, endTime time.Time, filter EndpointsFilter) (response.ServiceRYGLightRes, error)
 }
 

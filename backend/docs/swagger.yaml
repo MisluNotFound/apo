@@ -526,24 +526,6 @@ definitions:
         $ref: '#/definitions/model.AlertDetail'
       type: array
     type: object
-  model.AnormalType:
-    enum:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    type: integer
-    x-enum-varnames:
-    - AnormalTypeUnknown
-    - AnormalTypeAlertApp
-    - AnormalTypeAlertContainer
-    - AnormalTypeAlertInfra
-    - AnormalTypeAlertNet
-    - AnormalTypeError
-    - AnormalTypeMutation
   model.ModifyTableTTLMap:
     properties:
       TTLExpression:
@@ -605,6 +587,15 @@ definitions:
     x-enum-varnames:
     - StatusResolved
     - StatusFiring
+  polarisanalyzer.LatencyRelevance:
+    properties:
+      endpoint:
+        type: string
+      relevance:
+        type: number
+      service:
+        type: string
+    type: object
   prometheus.MetricsPoint:
     properties:
       timestamp:
@@ -1103,39 +1094,6 @@ definitions:
         description: 主键ID
         type: integer
     type: object
-  response.DescendantAnormalCounts:
-    properties:
-      anormalCounts:
-        additionalProperties:
-          type: integer
-        type: object
-      contentKey:
-        type: string
-      serviceName:
-        type: string
-    type: object
-  response.DescendantAnormalEventRecord:
-    properties:
-      alertKey:
-        type: string
-      anormalMsg:
-        type: string
-      anormalObject:
-        type: string
-      anormalReason:
-        type: string
-      anormalStatus:
-        description: startFiring / updatedFiring / resolved
-        type: string
-      anormalType:
-        $ref: '#/definitions/model.AnormalType'
-      contentKey:
-        type: string
-      serviceName:
-        type: string
-      timestamp:
-        type: integer
-    type: object
   response.DetailResponse:
     properties:
       id:
@@ -1301,34 +1259,22 @@ definitions:
       pagination:
         $ref: '#/definitions/model.Pagination'
     type: object
+  response.GetDescendantAlertContributationResponse:
+    properties:
+      latencyContributationList:
+        description: 延时曲线相似度前三的节点
+        items:
+          $ref: '#/definitions/polarisanalyzer.LatencyRelevance'
+        type: array
+    type: object
   response.GetDescendantAnormalEventResponse:
     properties:
-      anormalCount:
-        allOf:
-        - $ref: '#/definitions/response.TempChartObject'
-        description: |-
-          AnormalEvents []model.AnormalEvent `json:"anormalEvents"`
-          AnormalEvents map[int64][]model.AnormalEvent `json:"anormalEvents"`
-      deltaAnormalEvents:
+      alertEvents:
         items:
-          $ref: '#/definitions/response.DescendantAnormalEventRecord'
+          $ref: '#/definitions/clickhouse.PagedAlertEvent'
         type: array
-      finalAnormalCounts:
-        items:
-          $ref: '#/definitions/response.DescendantAnormalCounts'
-        type: array
-      finalAnormalEvents:
-        items:
-          $ref: '#/definitions/response.DescendantAnormalEventRecord'
-        type: array
-      originAnormalCounts:
-        items:
-          $ref: '#/definitions/response.DescendantAnormalCounts'
-        type: array
-      originAnormalEvents:
-        items:
-          $ref: '#/definitions/response.DescendantAnormalEventRecord'
-        type: array
+      pagination:
+        $ref: '#/definitions/model.Pagination'
     type: object
   response.GetDescendantMetricsResponse:
     properties:
@@ -2078,6 +2024,59 @@ paths:
       summary: 列出告警通知对象
       tags:
       - API.alerts
+  /api/alerts/descendant/anormal/contribution:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取下游故障贡献度
+      parameters:
+      - description: 查询开始时间
+        in: query
+        name: startTime
+        required: true
+        type: integer
+      - description: 查询结束时间
+        in: query
+        name: endTime
+        required: true
+        type: integer
+      - description: 查询服务名
+        in: query
+        name: service
+        required: true
+        type: string
+      - description: 查询Endpoint
+        in: query
+        name: endpoint
+        required: true
+        type: string
+      - description: 查询步长(us)
+        in: query
+        name: step
+        required: true
+        type: integer
+      - description: 入口服务名
+        in: query
+        name: entryService
+        type: string
+      - description: 入口Endpoint
+        in: query
+        name: entryEndpoint
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetDescendantAlertContributationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取下游故障贡献度
+      tags:
+      - API.alerts
   /api/alerts/descendant/anormal/delta:
     post:
       consumes:
@@ -2113,6 +2112,54 @@ paths:
         in: query
         name: anormalTypes
         required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetDescendantAnormalEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取下游告警事件
+      tags:
+      - API.alerts
+  /api/alerts/descendant/anormal/list:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取下游告警事件
+      parameters:
+      - description: 查询开始时间
+        in: query
+        name: startTime
+        required: true
+        type: integer
+      - description: 查询结束时间
+        in: query
+        name: endTime
+        required: true
+        type: integer
+      - description: 查询服务名
+        in: query
+        name: service
+        required: true
+        type: string
+      - description: 查询Endpoint
+        in: query
+        name: endpoint
+        required: true
+        type: string
+      - description: 入口服务名
+        in: query
+        name: entryService
+        type: string
+      - description: 入口Endpoint
+        in: query
+        name: entryEndpoint
         type: string
       produces:
       - application/json

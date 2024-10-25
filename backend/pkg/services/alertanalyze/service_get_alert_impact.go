@@ -38,7 +38,7 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 		PodSet:       map[podKey][]clickhouse.AlertService{},
 		NetSrcSet:    map[netSrcProcessKey][]clickhouse.AlertService{},
 	}
-
+	// TODO 增加关联告警百分比
 	var impactEvents = make([]response.ImpactAlertEvent, len(events))
 	for i := 0; i < len(events); i++ {
 		if req.AnalyzeSize == 0 && i > 50000 || req.AnalyzeSize != 0 && i > req.AnalyzeSize {

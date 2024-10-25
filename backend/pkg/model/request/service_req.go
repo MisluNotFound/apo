@@ -26,6 +26,19 @@ type GetDescendantMetricsRequest struct {
 }
 
 type GetDescendantAnormalEventRequest struct {
+	GetDescendantMetricsRequest
+
+	*PageParam // 分页参数
+}
+
+type GetDescendantAlertContributaionRequest struct {
+	GetDescendantMetricsRequest
+
+	// 贡献度排序方式
+	SortBy string `form:"sortBy"`
+}
+
+type GetDescendantAnormalDeltaEventRequest struct {
 	StartTime int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
 	EndTime   int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
 	Service   string `form:"service" binding:"required"`                   // 查询服务名

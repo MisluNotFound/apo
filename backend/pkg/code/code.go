@@ -101,9 +101,11 @@ const (
 	AlertEventImpactNoMatchedService = "B0729"
 	AlertEventIDMissing              = "B0730"
 
-	AlertAnalyzeDescendantAnormalEventError = "B0731"
-	GetAnomalySpanError                     = "B0732"
-	MutationPQLCheckFailed                  = "B0733"
+	AlertAnalyzeDescendantAnormalEventDeltaError = "B0731"
+	GetAnomalySpanError                          = "B0732"
+	MutationPQLCheckFailed                       = "B0733"
+	AlertAnalyzeDescendantAnormalEventError      = "B0734"
+	AlertAnalyzeDescendantAnormalContribution    = "B0735"
 )
 
 func Text(code string) string {

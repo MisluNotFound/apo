@@ -41,10 +41,10 @@ func (s *service) GetServicesEndpointDataByFilter(startTime time.Time, endTime t
 	// 根据排序规则对endpoints进行排序并填充部分未查询到的数据
 	err = s.sortWithRule(sortRule, endpointsMap)
 
-	// step4 将Endpoints按service分组,并维持service排序
+	// step4 将Endpoints按service分组,并维持service排序,只保留每组前三
 	services := fillServices(endpointsMap.MetricGroupList)
 
-	// step5 填充每个service分组前三url的RED图表数据
+	// step5 填充RED图表数据
 	s.EndpointRangeREDChart(&services, startTime, endTime, duration, step)
 
 	// step6 填充空值并调整返回结构
@@ -116,9 +116,9 @@ func (s *service) GetServicesEndpointDataByEndpoints(startTime time.Time, endTim
 	err = s.sortWithRule(sortRule, endpointsMap)
 
 	// step4 将Endpoints按service分组,并维持service排序
-	services := fillServices(endpointsMap.MetricGroupList)
+	services := fillEndpoints(endpointsMap.MetricGroupList)
 
-	// step5 填充每个service分组前三url的RED图表数据
+	// step5 填充RED图表数据
 	s.EndpointRangeREDChart(&services, startTime, endTime, duration, step)
 
 	// step6 填充空值并调整返回结构

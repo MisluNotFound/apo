@@ -4,9 +4,15 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/amconfig"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
+	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
 type GetDescendantAnormalEventResponse struct {
+	AlertEvents []clickhouse.PagedAlertEvent `json:"alertEvents"`
+	Pagination  *model.Pagination            `json:"pagination"`
+}
+
+type GetDescendantDeltaAnormalEventResponse struct {
 	// AnormalEvents []model.AnormalEvent `json:"anormalEvents"`
 	// AnormalEvents map[int64][]model.AnormalEvent `json:"anormalEvents"`
 	AnormalCount TempChartObject `json:"anormalCount"`

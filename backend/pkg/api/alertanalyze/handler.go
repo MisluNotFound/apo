@@ -4,6 +4,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/core"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	"github.com/CloudDetail/apo/backend/pkg/repository/database"
+	polaris "github.com/CloudDetail/apo/backend/pkg/repository/polarisanalyzer"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 	"github.com/CloudDetail/apo/backend/pkg/services/alertanalyze"
 	"github.com/CloudDetail/apo/backend/pkg/services/serviceoverview"
@@ -18,10 +19,20 @@ type Handler interface {
 	// @Router /api/alerts/event/impact [get]
 	GetAlertImpact() core.HandlerFunc
 
-	// GetDescendantAnormalEvent 获取下游告警事件
+	// GetDescendantContribution 获取下游故障贡献度
 	// @Tags API.alerts
-	// @Router /api/alerts/descendant/anormal [get]
-	GetDescendantAnormalEvent() core.HandlerFunc
+	// @Router /api/alerts/descendant/anormal/contribution [get]
+	GetDescendantContribution() core.HandlerFunc
+
+	// GetDescendantAnormal 获取下游异常
+	// @Tags API.alerts
+	// @Router /api/alerts/descendant/anormal/list [get]
+	GetDescendantAnormal() core.HandlerFunc
+
+	// GetDescendantAnormalDelta 获取下游异常变化趋势
+	// @Tags API.alerts
+	// @Router /api/alerts/descendant/anormal/delta [get]
+	GetDescendantAnormalDelta() core.HandlerFunc
 
 	// GetAnomalySpan 获取服务和根因类型的故障报告
 	// @Tags API.alert
@@ -35,10 +46,10 @@ type handler struct {
 	serviceoverviewService serviceoverview.Service
 }
 
-func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo, promRepo prometheus.Repo) Handler {
+func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo, promRepo prometheus.Repo, polRepo polaris.Repo) Handler {
 	return &handler{
 		logger:                 logger,
-		alertanalyzeService:    alertanalyze.New(chRepo, promRepo),
+		alertanalyzeService:    alertanalyze.New(chRepo, promRepo, polRepo),
 		serviceoverviewService: serviceoverview.New(chRepo, dbRepo, promRepo),
 	}
 }

@@ -85,12 +85,15 @@ var enText = map[string]string{
 	AlertManagerEmptyReceiver:               "alertManager receiver neither set webhook nor set email config",
 	AlertManagerDefaultReceiverCannotDelete: "alertManager default receiver cannot be deleted",
 
-	AlertEventImpactError:                   "Failed to get alert event impact",
-	AlertEventImpactMissingTag:              "Failed to get alert event impact, event missing tag ",
-	AlertEventImpactNoMatchedService:        "Failed to get alert event impact, no matched service for event ",
-	AlertEventIDMissing:                     "Failed to get alert event impact, can not find event by id within the search time range.",
-	AlertAnalyzeDescendantAnormalEventError: "Failed to analyze descendant anormal event",
-	GetAnomalySpanError:                     "get anomaly span failed",
+	AlertEventImpactError:                        "Failed to get alert event impact",
+	AlertEventImpactMissingTag:                   "Failed to get alert event impact, event missing tag ",
+	AlertEventImpactNoMatchedService:             "Failed to get alert event impact, no matched service for event ",
+	AlertEventIDMissing:                          "Failed to get alert event impact, can not find event by id within the search time range.",
+	AlertAnalyzeDescendantAnormalEventDeltaError: "Failed to analyze descendant anormal event",
+	GetAnomalySpanError:                          "get anomaly span failed",
 
 	MutationPQLCheckFailed: "Failed to check mutation by PQL",
+
+	AlertAnalyzeDescendantAnormalEventError:   "Failed to analyze descendant anormal event",
+	AlertAnalyzeDescendantAnormalContribution: "Failed to analyze descendant anormal contribution",
 }
