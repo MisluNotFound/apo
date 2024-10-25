@@ -7,8 +7,8 @@ import (
 )
 
 func groupBySQL(req *request.LogIndexRequest) string {
-	condition := fmt.Sprintf("timestamp >= toDateTime64(%d, 3) AND timestamp < toDateTime64(%d, 3) AND %s", req.StartTime/1000000, req.EndTime/1000000, req.Query)
-	sql := fmt.Sprintf("SELECT count(*) as count, `%s` as f FROM %s.%s WHERE %s GROUP BY %s ORDER BY count DESC LIMIT 10",
+	condition := NewQueryCondition(req.StartTime, req.EndTime, req.TimeField, req.Query)
+	sql := fmt.Sprintf("SELECT count(*) as count, `%s` as f FROM `%s`.`%s` WHERE %s GROUP BY %s ORDER BY count DESC LIMIT 10",
 		req.Column,
 		req.DataBase,
 		req.TableName,
@@ -19,8 +19,8 @@ func groupBySQL(req *request.LogIndexRequest) string {
 }
 
 func countSQL(req *request.LogIndexRequest) string {
-	condition := fmt.Sprintf("timestamp >= toDateTime64(%d, 3) AND timestamp < toDateTime64(%d, 3) AND %s", req.StartTime/1000000, req.EndTime/1000000, req.Query)
-	sql := fmt.Sprintf("SELECT count(*) as count FROM %s.%s WHERE %s",
+	condition := NewQueryCondition(req.StartTime, req.EndTime, req.TimeField, req.Query)
+	sql := fmt.Sprintf("SELECT count(*) as count FROM `%s`.`%s` WHERE %s",
 		req.DataBase,
 		req.TableName,
 		condition,

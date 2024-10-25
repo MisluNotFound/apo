@@ -509,10 +509,8 @@ definitions:
     type: object
   model.AlertMetricsData:
     properties:
-      labels:
-        items:
-          type: string
-        type: array
+      group:
+        type: string
       name:
         type: string
       pql:
@@ -621,6 +619,40 @@ definitions:
       alertRuleFile:
         type: string
     type: object
+  request.AddLogParseRequest:
+    properties:
+      logTable:
+        $ref: '#/definitions/request.LogTable'
+      parseInfo:
+        type: string
+      parseName:
+        type: string
+      parseRule:
+        type: string
+      routeRule:
+        additionalProperties:
+          type: string
+        type: object
+      serviceName:
+        items:
+          type: string
+        type: array
+    type: object
+  request.AddOtherTableRequest:
+    properties:
+      cluster:
+        type: string
+      dataBase:
+        type: string
+      instance:
+        type: string
+      logField:
+        type: string
+      tableName:
+        type: string
+      timeField:
+        type: string
+    type: object
   request.Alert:
     properties:
       annotations:
@@ -668,6 +700,23 @@ definitions:
     - alert
     - group
     type: object
+  request.BufferEngineConfig:
+    properties:
+      maxBytes:
+        type: integer
+      maxRows:
+        type: integer
+      maxTime:
+        type: integer
+      minBytes:
+        type: integer
+      minRows:
+        type: integer
+      minTime:
+        type: integer
+      numLayers:
+        type: integer
+    type: object
   request.DataType:
     enum:
     - int64
@@ -702,6 +751,31 @@ definitions:
     required:
     - alert
     - group
+    type: object
+  request.DeleteLogParseRequest:
+    properties:
+      dataBase:
+        type: string
+      parseName:
+        type: string
+      tableName:
+        type: string
+    type: object
+  request.DeleteOtherTableRequest:
+    properties:
+      dataBase:
+        type: string
+      instance:
+        type: string
+      tableName:
+        type: string
+    type: object
+  request.Field:
+    properties:
+      name:
+        type: string
+      type:
+        type: string
     type: object
   request.GetAlertManagerConfigReceverRequest:
     properties:
@@ -828,6 +902,13 @@ definitions:
     required:
     - endTime
     type: object
+  request.GetServiceRouteRequest:
+    properties:
+      serviceName:
+        items:
+          type: string
+        type: array
+    type: object
   request.GetTraceFilterValueRequest:
     properties:
       endTime:
@@ -921,6 +1002,8 @@ definitions:
         type: string
       endTime:
         type: integer
+      logField:
+        type: string
       query:
         type: string
       startTime:
@@ -928,8 +1011,23 @@ definitions:
         type: integer
       tableName:
         type: string
+      timeField:
+        type: string
     required:
     - endTime
+    type: object
+  request.LogQueryContextRequest:
+    properties:
+      dataBase:
+        type: string
+      tableName:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      timestamp:
+        type: integer
     type: object
   request.LogQueryRequest:
     properties:
@@ -937,6 +1035,8 @@ definitions:
         type: string
       endTime:
         type: integer
+      logField:
+        type: string
       pageNum:
         type: integer
       pageSize:
@@ -948,8 +1048,21 @@ definitions:
         type: integer
       tableName:
         type: string
+      timeField:
+        type: string
     required:
     - endTime
+    type: object
+  request.LogTable:
+    properties:
+      buffer:
+        $ref: '#/definitions/request.BufferEngineConfig'
+      fields:
+        items:
+          $ref: '#/definitions/request.Field'
+        type: array
+      ttl:
+        type: integer
     type: object
   request.LogTableInfoRequest:
     type: object
@@ -981,6 +1094,15 @@ definitions:
     - OpNotContains
     - OpGreaterThan
     - OpLessThan
+  request.OtherTableInfoRequest:
+    properties:
+      dataBase:
+        type: string
+      tableName:
+        type: string
+    type: object
+  request.OtherTableRequest:
+    type: object
   request.ParentField:
     enum:
     - labels
@@ -1068,13 +1190,26 @@ definitions:
     properties:
       dataBase:
         type: string
+      parseInfo:
+        type: string
       parseName:
         type: string
       parseRule:
         type: string
       routeRule:
-        type: string
+        additionalProperties:
+          type: string
+        type: object
+      serviceName:
+        items:
+          type: string
+        type: array
       tableName:
+        type: string
+    type: object
+  response.AddOtherTableResponse:
+    properties:
+      error:
         type: string
     type: object
   response.CheckAlertRuleResponse:
@@ -1082,11 +1217,32 @@ definitions:
       available:
         type: boolean
     type: object
+  response.Column:
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+    type: object
   response.CreateResponse:
     properties:
       id:
         description: 主键ID
         type: integer
+    type: object
+  response.DBInfo:
+    properties:
+      dataBase:
+        type: string
+      tables:
+        items:
+          $ref: '#/definitions/response.LogTableInfo'
+        type: array
+    type: object
+  response.DeleteOtherTableResponse:
+    properties:
+      error:
+        type: string
     type: object
   response.DeleteResponse:
     properties:
@@ -1420,6 +1576,13 @@ definitions:
           $ref: '#/definitions/model.AlertMetricsData'
         type: array
     type: object
+  response.GetMonitorStatusResponse:
+    properties:
+      monitorList:
+        items:
+          $ref: '#/definitions/response.MonitorStatus'
+        type: array
+    type: object
   response.GetPolarisInferResponse:
     properties:
       inferCause:
@@ -1482,6 +1645,13 @@ definitions:
         type: array
       status:
         type: string
+    type: object
+  response.GetServiceRouteResponse:
+    properties:
+      routeRule:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   response.GetTTLResponse:
     properties:
@@ -1565,6 +1735,15 @@ definitions:
         type: string
       percent:
         type: number
+    type: object
+  response.Instance:
+    properties:
+      dataBases:
+        items:
+          $ref: '#/definitions/response.DBInfo'
+        type: array
+      instanceName:
+        type: string
     type: object
   response.InstanceData:
     properties:
@@ -1669,6 +1848,8 @@ definitions:
     properties:
       count:
         type: integer
+      error:
+        type: string
       histograms:
         items:
           $ref: '#/definitions/response.LogHistogram'
@@ -1694,14 +1875,42 @@ definitions:
           $ref: '#/definitions/response.IndexItem'
         type: array
     type: object
+  response.LogItem:
+    properties:
+      content: {}
+      tags:
+        additionalProperties: true
+        type: object
+      timestamp:
+        type: integer
+    type: object
   response.LogParseResponse:
     properties:
+      parseInfo:
+        type: string
       parseName:
         type: string
       parseRule:
         type: string
       routeRule:
-        type: string
+        additionalProperties:
+          type: string
+        type: object
+      serviceName:
+        items:
+          type: string
+        type: array
+    type: object
+  response.LogQueryContextResponse:
+    properties:
+      back:
+        items:
+          $ref: '#/definitions/response.LogItem'
+        type: array
+      front:
+        items:
+          $ref: '#/definitions/response.LogItem'
+        type: array
     type: object
   response.LogQueryResponse:
     properties:
@@ -1711,6 +1920,8 @@ definitions:
         items:
           type: string
         type: array
+      error:
+        type: string
       hiddenFields:
         items:
           type: string
@@ -1719,27 +1930,69 @@ definitions:
         type: integer
       logs:
         items:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/response.LogItem'
         type: array
       query:
         type: string
     type: object
-  response.LogTable:
+  response.LogTableInfo:
     properties:
       cluster:
         type: string
+      logField:
+        type: string
       tableName:
+        type: string
+      timeField:
         type: string
     type: object
   response.LogTableInfoResponse:
     properties:
-      logTables:
-        additionalProperties:
-          items:
-            $ref: '#/definitions/response.LogTable'
-          type: array
-        type: object
+      instances:
+        items:
+          $ref: '#/definitions/response.Instance'
+        type: array
+      parses:
+        items:
+          $ref: '#/definitions/response.Parse'
+        type: array
+    type: object
+  response.MonitorStatus:
+    properties:
+      isAlive:
+        type: boolean
+      monitorName:
+        type: string
+    type: object
+  response.OtherDB:
+    properties:
+      dataBase:
+        type: string
+      tables:
+        items:
+          $ref: '#/definitions/response.OtherTable'
+        type: array
+    type: object
+  response.OtherTable:
+    properties:
+      tableName:
+        type: string
+    type: object
+  response.OtherTableInfoResponse:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/response.Column'
+        type: array
+      error:
+        type: string
+    type: object
+  response.OtherTableResponse:
+    properties:
+      otherTables:
+        items:
+          $ref: '#/definitions/response.OtherDB'
+        type: array
     type: object
   response.Pagination:
     properties:
@@ -1752,6 +2005,17 @@ definitions:
       total:
         description: 总记录数
         type: integer
+    type: object
+  response.Parse:
+    properties:
+      dataBase:
+        type: string
+      parseInfo:
+        type: string
+      parseName:
+        type: string
+      tableName:
+        type: string
     type: object
   response.RYGScoreDetail:
     properties:
@@ -2554,6 +2818,32 @@ paths:
       summary: 获取日志趋势图
       tags:
       - API.log
+  /api/log/context:
+    post:
+      consumes:
+      - application/json
+      description: 获取日志上下文
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.LogQueryContextRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LogQueryContextResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取日志上下文
+      tags:
+      - API.log
   /api/log/fault/content:
     post:
       description: 获取故障现场日志内容
@@ -2630,6 +2920,110 @@ paths:
       summary: 分析字段索引
       tags:
       - API.log
+  /api/log/other:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取外部日志表
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.OtherTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OtherTableResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取外部日志表
+      tags:
+      - API.log
+  /api/log/other/add:
+    post:
+      consumes:
+      - application/json
+      description: 添加外部日志表
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddOtherTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AddOtherTableResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 添加外部日志表
+      tags:
+      - API.log
+  /api/log/other/delete:
+    delete:
+      consumes:
+      - application/json
+      description: 移除外部日志表
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteOtherTableRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.DeleteOtherTableResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 移除外部日志表
+      tags:
+      - API.log
+  /api/log/other/table:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取外部日志表信息
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.OtherTableInfoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.OtherTableInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取外部日志表信息
+      tags:
+      - API.log
   /api/log/query:
     post:
       consumes:
@@ -2656,10 +3050,62 @@ paths:
       summary: 查询全量日志日志
       tags:
       - API.log
-  /api/log/rule/get:
+  /api/log/rule/add:
     post:
       consumes:
       - application/json
+      description: 新增日志表解析规则
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.AddLogParseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LogParseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 新增日志表解析规则
+      tags:
+      - API.log
+  /api/log/rule/delete:
+    delete:
+      consumes:
+      - application/json
+      description: 删除日志表解析规则
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DeleteLogParseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.LogParseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 删除日志表解析规则
+      tags:
+      - API.log
+  /api/log/rule/get:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
       description: 获取日志表解析规则
       parameters:
       - description: 请求信息
@@ -2680,6 +3126,32 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 获取日志表解析规则
+      tags:
+      - API.log
+  /api/log/rule/service:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取服务对应的应用日志
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetServiceRouteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetServiceRouteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取服务对应的应用日志
       tags:
       - API.log
   /api/log/rule/update:
@@ -2709,9 +3181,9 @@ paths:
       tags:
       - API.log
   /api/log/table:
-    post:
+    get:
       consumes:
-      - application/json
+      - application/x-www-form-urlencoded
       description: 获取日志表信息
       parameters:
       - description: 请求信息
@@ -3210,6 +3682,10 @@ paths:
         name: step
         required: true
         type: integer
+      - description: 显示缺失入口
+        in: query
+        name: showMissTop
+        type: boolean
       produces:
       - application/json
       responses:
@@ -3666,6 +4142,36 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 获取日志相关指标
+      tags:
+      - API.service
+  /api/service/monitor/status:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取kuma监控的服务状态
+      parameters:
+      - description: 查询开始时间
+        in: query
+        name: startTime
+        required: true
+        type: integer
+      - description: 查询结束时间
+        in: query
+        name: endTime
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetMonitorStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取kuma监控的服务状态
       tags:
       - API.service
   /api/service/moreUrl:

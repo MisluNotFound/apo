@@ -397,7 +397,7 @@ func (ch *chRepo) GetFieldValues(searchText string, filter *request.SpanTraceFil
 		for rows.Next() {
 			var value uint32
 			if err := rows.Scan(&value); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			numOptions = append(numOptions, value)
 			res = numOptions
@@ -407,7 +407,7 @@ func (ch *chRepo) GetFieldValues(searchText string, filter *request.SpanTraceFil
 		for rows.Next() {
 			var value uint64
 			if err := rows.Scan(&value); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			numOptions = append(numOptions, value)
 			res = numOptions
@@ -417,7 +417,7 @@ func (ch *chRepo) GetFieldValues(searchText string, filter *request.SpanTraceFil
 		for rows.Next() {
 			var value int64
 			if err := rows.Scan(&value); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			numOptions = append(numOptions, value)
 			res = numOptions
@@ -427,7 +427,7 @@ func (ch *chRepo) GetFieldValues(searchText string, filter *request.SpanTraceFil
 		for rows.Next() {
 			var value string
 			if err := rows.Scan(&value); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 			strOptions = append(strOptions, value)
 			res = strOptions

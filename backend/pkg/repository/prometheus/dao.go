@@ -8,6 +8,7 @@ import (
 
 	"github.com/CloudDetail/apo/backend/config"
 	"github.com/CloudDetail/apo/backend/pkg/model"
+	prommodel "github.com/prometheus/common/model"
 
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -35,6 +36,7 @@ type Repo interface {
 	GetMultiServicesInstanceList(startTime int64, endTime int64, services []string) (map[string]*model.ServiceInstances, error)
 	// 查询服务实例失败率
 	QueryInstanceErrorRate(startTime int64, endTime int64, step int64, endpoint string, instance *model.ServiceInstance) (map[int64]float64, error)
+	FillMetric(res MetricGroupInterface, metricGroup MGroupName, startTime, endTime time.Time, filters []string, granularity Granularity)
 	// ========== span_trace_duration_count END ==========
 
 	QueryData(searchTime time.Time, query string) ([]MetricResult, error)
@@ -50,11 +52,12 @@ type Repo interface {
 	// ========== originx_logparser_level_count_total Start ==========
 	// 查询实例日志Error数
 	QueryLogCountByInstanceId(instance *model.ServiceInstance, startTime int64, endTime int64, step int64) (map[int64]float64, error)
+	// QueryInstanceLogRangeData 查询实例级别的日志曲线图
+	QueryInstanceLogRangeData(pqlTemplate AggPQLWithFilters, startTime int64, endTime int64, stepMicroS int64, granularity Granularity, podFilterKVs, vmFilterKVs []string) ([]MetricResult, error)
 	// ========== originx_logparser_level_count_total END ==========
 
 	QueryAggMetricsWithFilter(pqlTemplate AggPQLWithFilters, startTime int64, endTime int64, granularity Granularity, filterKVs ...string) ([]MetricResult, error)
 	QueryRangeAggMetricsWithFilter(pqlTemplate AggPQLWithFilters, startTime int64, endTime int64, step int64, granularity Granularity, filterKVs ...string) ([]MetricResult, error)
-
 	// originx_process_start_time
 	QueryProcessStartTime(startTime time.Time, endTime time.Time, instances []*model.ServiceInstance) (map[model.ServiceInstance]int64, error)
 	GetApi() v1.API
@@ -118,7 +121,7 @@ type Labels struct {
 	SvcName     string `json:"svc_name"`
 	TopSpan     string `json:"top_span"`
 	PID         string `json:"pid"`
-	PodName     string `json:"pod_name"`
+	PodName     string `json:"pod_name"` // TODO 统一为pod之后可以删除
 	Namespace   string `json:"namespace"`
 	NodeIP      string `json:"node_ip"`
 
@@ -128,6 +131,57 @@ type Labels struct {
 	// e.g: SELECT trip
 	Name  string `json:"name"`
 	DBUrl string `json:"db_url"`
+
+	MonitorName string `json:"monitor_name"`
+}
+
+// Extract 提取出需要的label
+// 需要同步Labels字段的变化
+func (l *Labels) Extract(metric prommodel.Metric) {
+	for name, value := range metric {
+		switch string(name) {
+		case "container_id":
+			l.ContainerID = string(value)
+		case "content_key":
+			l.ContentKey = string(value)
+		case "instance":
+			l.Instance = string(value)
+		case "is_error":
+			l.IsError = string(value)
+		case "job":
+			l.Job = string(value)
+		case "node_name":
+			l.NodeName = string(value)
+		case "pod":
+			l.POD = string(value)
+		case "svc_name":
+			l.SvcName = string(value)
+		case "top_span":
+			l.TopSpan = string(value)
+		case "pid":
+			l.PID = string(value)
+		case "namespace":
+			l.Namespace = string(value)
+		case "db_system":
+			l.DBSystem = string(value)
+		case "db_name":
+			l.DBName = string(value)
+		case "name":
+			l.Name = string(value)
+		case "db_url":
+			l.DBUrl = string(value)
+		case "monitor_name":
+			l.MonitorName = string(value)
+		case "node_ip":
+			l.NodeIP = string(value)
+		case "host_ip":
+			l.NodeIP = string(value)
+		case "host_name":
+			l.NodeName = string(value)
+		case "pod_name":
+			l.POD = string(value)
+		}
+	}
 }
 
 type MetricResult struct {

@@ -29,13 +29,11 @@ var zhCnText = map[string]string{
 
 	GetFaultLogPageListError: "获取故障现场日志分页列表失败",
 	GetFaultLogContentError:  "获取故障现场日志内容失败",
-	CreateLogTableError:      "创建全量日志表出错",
-	DropLogTableError:        "删除全量日志表出错",
-	UpateLogTableError:       "更新全量日志表出错",
 
-	QueryLogError:    "查询全量日志失败",
-	GetLogChartError: "获取全量日志图表数据失败",
-	GetLogIndexError: "获取全量日志索引失败",
+	QueryLogContextError: "查询日志上下文失败",
+	QueryLogError:        "查询全量日志失败",
+	GetLogChartError:     "获取全量日志图表数据失败",
+	GetLogIndexError:     "获取全量日志索引失败",
 
 	GetLogTableInfoError:    "获取日志表信息失败",
 	GetLogParseRuleError:    "获取日志表解析规则失败",
@@ -53,6 +51,7 @@ var zhCnText = map[string]string{
 	GetServicesAlertError:               "获取服务告警信息失败",
 	SetTTLError:                         "配置存储周期失败",
 	GetTTLError:                         "获取存储周期失败",
+	GetMonitorStatusError:               "获取监控服务状态失败",
 	SetSingleTableTTLError:              "配置单个存储周期失败",
 
 	GetAlertEventsError:       "获取告警事件失败",

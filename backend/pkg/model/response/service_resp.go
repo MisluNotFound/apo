@@ -317,3 +317,12 @@ type GetAnomalySpanResponse struct {
 	List       []clickhouse.QueryTraceResult `json:"list"`
 	Pagination *model.Pagination             `json:"pagination"`
 }
+
+type GetMonitorStatusResponse struct {
+	MonitorList []MonitorStatus `json:"monitorList"`
+}
+
+type MonitorStatus struct {
+	MonitorName string `json:"monitorName"`
+	IsAlive     bool   `json:"isAlive"`
+}

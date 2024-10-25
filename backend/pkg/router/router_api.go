@@ -32,6 +32,7 @@ func setApiRouter(r *resource) {
 		serviceApi.GET("/getThreshold", serviceOverviewHandler.GetThreshold())
 		serviceApi.POST("/setThreshold", serviceOverviewHandler.SetThreshold())
 		serviceApi.GET("/ryglight", serviceOverviewHandler.GetRYGLight())
+		serviceApi.GET("/monitor/status", serviceOverviewHandler.GetMonitorStatus())
 
 		serviceHandler := service.New(r.logger, r.ch, r.prom, r.pol, r.pkg_db)
 		serviceApi.GET("/entry/endpoints", serviceHandler.GetServiceEntryEndpoints())
@@ -62,22 +63,29 @@ func setApiRouter(r *resource) {
 
 	logApi := r.mux.Group("/api/log")
 	{
-		logHandler := log.New(r.logger, r.ch, r.pkg_db, r.k8sApi)
+		logHandler := log.New(r.logger, r.ch, r.pkg_db, r.k8sApi, r.prom)
 		logApi.POST("/fault/pagelist", logHandler.GetFaultLogPageList())
 		logApi.POST("/fault/content", logHandler.GetFaultLogContent())
-		logApi.POST("/create", logHandler.CreateLogTable())
-		logApi.POST("/update", logHandler.UpdateLogTable())
-		logApi.POST("/drop", logHandler.DropLogTable())
+
+		logApi.POST("/context", logHandler.QueryLogContext())
 
 		logApi.POST("/query", logHandler.QueryLog())
 		logApi.POST("/chart", logHandler.GetLogChart())
 		logApi.POST("/index", logHandler.GetLogIndex())
 
-		logApi.POST("/table", logHandler.GetLogTableInfo())
+		logApi.GET("/table", logHandler.GetLogTableInfo())
 
-		logApi.POST("/rule/get", logHandler.GetLogParseRule())
+		logApi.GET("/rule/service", logHandler.GetServiceRoute())
+
+		logApi.GET("/rule/get", logHandler.GetLogParseRule())
 		logApi.POST("/rule/update", logHandler.UpdateLogParseRule())
+		logApi.POST("/rule/add", logHandler.AddLogParseRule())
+		logApi.DELETE("/rule/delete", logHandler.DeleteLogParseRule())
 
+		logApi.GET("/other", logHandler.OtherTable())
+		logApi.GET("/other/table", logHandler.OtherTableInfo())
+		logApi.POST("/other/add", logHandler.AddOtherTable())
+		logApi.DELETE("/other/delete", logHandler.DeleteOtherTable())
 	}
 
 	traceApi := r.mux.Group("/api/trace")

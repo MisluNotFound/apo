@@ -978,6 +978,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/log/context": {
+            "post": {
+                "description": "获取日志上下文",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "获取日志上下文",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.LogQueryContextRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.LogQueryContextResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/log/fault/content": {
             "post": {
                 "description": "获取故障现场日志内容",
@@ -1095,6 +1135,166 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/log/other": {
+            "get": {
+                "description": "获取外部日志表",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "获取外部日志表",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OtherTableRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.OtherTableResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/other/add": {
+            "post": {
+                "description": "添加外部日志表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "添加外部日志表",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddOtherTableRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AddOtherTableResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/other/delete": {
+            "delete": {
+                "description": "移除外部日志表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "移除外部日志表",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DeleteOtherTableRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.DeleteOtherTableResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/other/table": {
+            "get": {
+                "description": "获取外部日志表信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "获取外部日志表信息",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.OtherTableInfoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.OtherTableInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/log/query": {
             "post": {
                 "description": "查询全量日志",
@@ -1135,11 +1335,91 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/log/rule/get": {
+        "/api/log/rule/add": {
             "post": {
-                "description": "获取日志表解析规则",
+                "description": "新增日志表解析规则",
                 "consumes": [
                     "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "新增日志表解析规则",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AddLogParseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.LogParseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/rule/delete": {
+            "delete": {
+                "description": "删除日志表解析规则",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "删除日志表解析规则",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DeleteLogParseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.LogParseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/rule/get": {
+            "get": {
+                "description": "获取日志表解析规则",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -1164,6 +1444,46 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.LogParseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/log/rule/service": {
+            "get": {
+                "description": "获取服务对应的应用日志",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.log"
+                ],
+                "summary": "获取服务对应的应用日志",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetServiceRouteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetServiceRouteResponse"
                         }
                     },
                     "400": {
@@ -1216,10 +1536,10 @@ const docTemplate = `{
             }
         },
         "/api/log/table": {
-            "post": {
+            "get": {
                 "description": "获取日志表信息",
                 "consumes": [
-                    "application/json"
+                    "application/x-www-form-urlencoded"
                 ],
                 "produces": [
                     "application/json"
@@ -1967,6 +2287,12 @@ const docTemplate = `{
                         "name": "step",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "显示缺失入口",
+                        "name": "showMissTop",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2632,6 +2958,51 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/response.GetLogMetricsResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/service/monitor/status": {
+            "get": {
+                "description": "获取kuma监控的服务状态",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.service"
+                ],
+                "summary": "获取kuma监控的服务状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "查询开始时间",
+                        "name": "startTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "查询结束时间",
+                        "name": "endTime",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetMonitorStatusResponse"
                         }
                     },
                     "400": {
@@ -4226,11 +4597,8 @@ const docTemplate = `{
         "model.AlertMetricsData": {
             "type": "object",
             "properties": {
-                "labels": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "group": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -4388,6 +4756,58 @@ const docTemplate = `{
                 }
             }
         },
+        "request.AddLogParseRequest": {
+            "type": "object",
+            "properties": {
+                "logTable": {
+                    "$ref": "#/definitions/request.LogTable"
+                },
+                "parseInfo": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "parseRule": {
+                    "type": "string"
+                },
+                "routeRule": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "serviceName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "request.AddOtherTableRequest": {
+            "type": "object",
+            "properties": {
+                "cluster": {
+                    "type": "string"
+                },
+                "dataBase": {
+                    "type": "string"
+                },
+                "instance": {
+                    "type": "string"
+                },
+                "logField": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                },
+                "timeField": {
+                    "type": "string"
+                }
+            }
+        },
         "request.Alert": {
             "type": "object",
             "properties": {
@@ -4459,6 +4879,32 @@ const docTemplate = `{
                 }
             }
         },
+        "request.BufferEngineConfig": {
+            "type": "object",
+            "properties": {
+                "maxBytes": {
+                    "type": "integer"
+                },
+                "maxRows": {
+                    "type": "integer"
+                },
+                "maxTime": {
+                    "type": "integer"
+                },
+                "minBytes": {
+                    "type": "integer"
+                },
+                "minRows": {
+                    "type": "integer"
+                },
+                "minTime": {
+                    "type": "integer"
+                },
+                "numLayers": {
+                    "type": "integer"
+                }
+            }
+        },
         "request.DataType": {
             "type": "string",
             "enum": [
@@ -4504,6 +4950,45 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "group": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.DeleteLogParseRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.DeleteOtherTableRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "instance": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Field": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -4690,6 +5175,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.GetServiceRouteRequest": {
+            "type": "object",
+            "properties": {
+                "serviceName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "request.GetTraceFilterValueRequest": {
             "type": "object",
             "required": [
@@ -4826,6 +5322,9 @@ const docTemplate = `{
                 "endTime": {
                     "type": "integer"
                 },
+                "logField": {
+                    "type": "string"
+                },
                 "query": {
                     "type": "string"
                 },
@@ -4835,6 +5334,29 @@ const docTemplate = `{
                 },
                 "tableName": {
                     "type": "string"
+                },
+                "timeField": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.LogQueryContextRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "timestamp": {
+                    "type": "integer"
                 }
             }
         },
@@ -4849,6 +5371,9 @@ const docTemplate = `{
                 },
                 "endTime": {
                     "type": "integer"
+                },
+                "logField": {
+                    "type": "string"
                 },
                 "pageNum": {
                     "type": "integer"
@@ -4865,6 +5390,26 @@ const docTemplate = `{
                 },
                 "tableName": {
                     "type": "string"
+                },
+                "timeField": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.LogTable": {
+            "type": "object",
+            "properties": {
+                "buffer": {
+                    "$ref": "#/definitions/request.BufferEngineConfig"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.Field"
+                    }
+                },
+                "ttl": {
+                    "type": "integer"
                 }
             }
         },
@@ -4901,6 +5446,20 @@ const docTemplate = `{
                 "OpGreaterThan",
                 "OpLessThan"
             ]
+        },
+        "request.OtherTableInfoRequest": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.OtherTableRequest": {
+            "type": "object"
         },
         "request.ParentField": {
             "type": "string",
@@ -5029,6 +5588,9 @@ const docTemplate = `{
                 "dataBase": {
                     "type": "string"
                 },
+                "parseInfo": {
+                    "type": "string"
+                },
                 "parseName": {
                     "type": "string"
                 },
@@ -5036,9 +5598,26 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "routeRule": {
-                    "type": "string"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "serviceName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tableName": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AddOtherTableResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
                     "type": "string"
                 }
             }
@@ -5051,12 +5630,45 @@ const docTemplate = `{
                 }
             }
         },
+        "response.Column": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "response.CreateResponse": {
             "type": "object",
             "properties": {
                 "id": {
                     "description": "主键ID",
                     "type": "integer"
+                }
+            }
+        },
+        "response.DBInfo": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.LogTableInfo"
+                    }
+                }
+            }
+        },
+        "response.DeleteOtherTableResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
                 }
             }
         },
@@ -5548,6 +6160,17 @@ const docTemplate = `{
                 }
             }
         },
+        "response.GetMonitorStatusResponse": {
+            "type": "object",
+            "properties": {
+                "monitorList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.MonitorStatus"
+                    }
+                }
+            }
+        },
         "response.GetPolarisInferResponse": {
             "type": "object",
             "properties": {
@@ -5644,6 +6267,17 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "response.GetServiceRouteResponse": {
+            "type": "object",
+            "properties": {
+                "routeRule": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -5768,6 +6402,20 @@ const docTemplate = `{
                 },
                 "percent": {
                     "type": "number"
+                }
+            }
+        },
+        "response.Instance": {
+            "type": "object",
+            "properties": {
+                "dataBases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DBInfo"
+                    }
+                },
+                "instanceName": {
+                    "type": "string"
                 }
             }
         },
@@ -5924,6 +6572,9 @@ const docTemplate = `{
                 "count": {
                     "type": "integer"
                 },
+                "error": {
+                    "type": "string"
+                },
                 "histograms": {
                     "type": "array",
                     "items": {
@@ -5963,9 +6614,25 @@ const docTemplate = `{
                 }
             }
         },
+        "response.LogItem": {
+            "type": "object",
+            "properties": {
+                "content": {},
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.LogParseResponse": {
             "type": "object",
             "properties": {
+                "parseInfo": {
+                    "type": "string"
+                },
                 "parseName": {
                     "type": "string"
                 },
@@ -5973,7 +6640,33 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "routeRule": {
-                    "type": "string"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "serviceName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "response.LogQueryContextResponse": {
+            "type": "object",
+            "properties": {
+                "back": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.LogItem"
+                    }
+                },
+                "front": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.LogItem"
+                    }
                 }
             }
         },
@@ -5989,6 +6682,9 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "error": {
+                    "type": "string"
+                },
                 "hiddenFields": {
                     "type": "array",
                     "items": {
@@ -6001,8 +6697,7 @@ const docTemplate = `{
                 "logs": {
                     "type": "array",
                     "items": {
-                        "type": "object",
-                        "additionalProperties": true
+                        "$ref": "#/definitions/response.LogItem"
                     }
                 },
                 "query": {
@@ -6010,13 +6705,19 @@ const docTemplate = `{
                 }
             }
         },
-        "response.LogTable": {
+        "response.LogTableInfo": {
             "type": "object",
             "properties": {
                 "cluster": {
                     "type": "string"
                 },
+                "logField": {
+                    "type": "string"
+                },
                 "tableName": {
+                    "type": "string"
+                },
+                "timeField": {
                     "type": "string"
                 }
             }
@@ -6024,13 +6725,74 @@ const docTemplate = `{
         "response.LogTableInfoResponse": {
             "type": "object",
             "properties": {
-                "logTables": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/response.LogTable"
-                        }
+                "instances": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Instance"
+                    }
+                },
+                "parses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Parse"
+                    }
+                }
+            }
+        },
+        "response.MonitorStatus": {
+            "type": "object",
+            "properties": {
+                "isAlive": {
+                    "type": "boolean"
+                },
+                "monitorName": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.OtherDB": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "tables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.OtherTable"
+                    }
+                }
+            }
+        },
+        "response.OtherTable": {
+            "type": "object",
+            "properties": {
+                "tableName": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.OtherTableInfoResponse": {
+            "type": "object",
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.Column"
+                    }
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.OtherTableResponse": {
+            "type": "object",
+            "properties": {
+                "otherTables": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.OtherDB"
                     }
                 }
             }
@@ -6049,6 +6811,23 @@ const docTemplate = `{
                 "total": {
                     "description": "总记录数",
                     "type": "integer"
+                }
+            }
+        },
+        "response.Parse": {
+            "type": "object",
+            "properties": {
+                "dataBase": {
+                    "type": "string"
+                },
+                "parseInfo": {
+                    "type": "string"
+                },
+                "parseName": {
+                    "type": "string"
+                },
+                "tableName": {
+                    "type": "string"
                 }
             }
         },

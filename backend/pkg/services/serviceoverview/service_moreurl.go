@@ -20,7 +20,8 @@ func (s *service) GetServiceMoreUrl(startTime time.Time, endTime time.Time, step
 		prom.ServicePQLFilter, serviceName,
 	}
 
-	endpointsMap := s.QueryEndpointsREDMetricByFilter(startTime, endTime, filters)
+	filters := filter.ExtractFilterStr()
+	endpointsMap := s.EndpointsREDMetric(startTime, endTime, filters)
 	endpoints := endpointsMap.MetricGroupList
 
 	// step2 填充延时依赖关系

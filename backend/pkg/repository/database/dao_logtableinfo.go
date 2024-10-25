@@ -9,6 +9,8 @@ type LogTableInfo struct {
 	ParseName string `gorm:"type:varchar(100);column:parsename"`
 	RouteRule string `gorm:"type:varchar(100);column:routerule"`
 	ParseRule string `gorm:"type:varchar(100);column:parserule"`
+	ParseInfo string `gorm:"type:varchar(100);column:parseinfo"`
+	Service   string `gorm:"type:varchar(100)"`
 }
 
 func (LogTableInfo) TableName() string {
@@ -46,5 +48,11 @@ func (repo *daoRepo) GetAllLogTable() ([]LogTableInfo, error) {
 }
 
 func (repo *daoRepo) UpdateLogPaseRule(model *LogTableInfo) error {
-	return repo.db.Model(&LogTableInfo{}).Where("database=? AND tablename=?", model.DataBase, model.Table).Updates(LogTableInfo{ParseRule: model.ParseRule, RouteRule: model.RouteRule}).Error
+	return repo.db.Model(&LogTableInfo{}).Where("database=? AND tablename=?", model.DataBase, model.Table).Updates(LogTableInfo{
+		ParseInfo: model.ParseInfo,
+		ParseRule: model.ParseRule,
+		RouteRule: model.RouteRule,
+		Service:   model.Service,
+		Fields:    model.Fields,
+	}).Error
 }

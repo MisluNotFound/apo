@@ -1,6 +1,9 @@
 package log
 
 import (
+	"encoding/json"
+	"strings"
+
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/database"
@@ -9,7 +12,36 @@ import (
 )
 
 func (s *service) UpdateLogParseRule(req *request.UpdateLogParseRequest) (*response.LogParseResponse, error) {
+	//更新日志表
+	matchesFields := fieldsRegexp.FindAllStringSubmatch(req.ParseRule, -1)
+
+	fields := make([]request.Field, 0)
+	for _, match := range matchesFields {
+		if match[1] == "msg" || match[1] == "ts" {
+			continue
+		}
+		fields = append(fields, request.Field{
+			Name: match[1],
+			Type: "String",
+		})
+	}
+	logReq := &request.LogTableRequest{
+		DataBase:  req.DataBase,
+		TableName: req.TableName,
+		Fields:    fields,
+	}
+	logReq.FillerValue()
+	_, err := s.UpdateLogTable(logReq)
+	if err != nil {
+		return nil, err
+	}
+
 	// 更新k8s configmap
+	res := &response.LogParseResponse{
+		ParseName: req.ParseName,
+		ParseRule: req.ParseRule,
+		RouteRule: req.RouteRule,
+	}
 	data, err := s.k8sApi.GetVectorConfigFile()
 	if err != nil {
 		return nil, err
@@ -22,7 +54,7 @@ func (s *service) UpdateLogParseRule(req *request.UpdateLogParseRequest) (*respo
 	p := vector.ParseInfo{
 		ParseName: req.ParseName,
 		ParseRule: req.ParseRule,
-		RouteRule: req.RouteRule,
+		RouteRule: getRouteRule(req.RouteRule),
 	}
 	newData, err := p.UpdateParseRule(vectorCfg)
 	if err != nil {
@@ -32,10 +64,20 @@ func (s *service) UpdateLogParseRule(req *request.UpdateLogParseRequest) (*respo
 	if err != nil {
 		return nil, err
 	}
-	// 更新sqlite表信息
+
+	// 调整整个表结构
+
+	fieldsJSON, err := json.Marshal(logReq.Fields)
+	if err != nil {
+		return nil, err
+	}
+
 	log := database.LogTableInfo{
+		Service:   strings.Join(req.Service, ","),
 		ParseRule: req.ParseRule,
-		RouteRule: req.RouteRule,
+		ParseInfo: req.ParseInfo,
+		RouteRule: getRouteRule(req.RouteRule),
+		Fields:    string(fieldsJSON),
 		Table:     req.TableName,
 		DataBase:  req.DataBase,
 	}
@@ -44,9 +86,5 @@ func (s *service) UpdateLogParseRule(req *request.UpdateLogParseRequest) (*respo
 		return nil, err
 	}
 
-	return &response.LogParseResponse{
-		ParseName: req.ParseName,
-		ParseRule: req.ParseRule,
-		RouteRule: req.RouteRule,
-	}, nil
+	return res, nil
 }

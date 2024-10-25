@@ -122,6 +122,14 @@ type GetServiceInstanceListRequest struct {
 	ServiceName string `form:"service" binding:"required"`                   // 查询服务名
 }
 
+type GetServiceInstanceRequest struct {
+	StartTime   int64  `form:"startTime" binding:"required"`                 // 查询开始时间
+	EndTime     int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
+	Step        int64  `form:"step" binding:"required"`                      // 步长
+	ServiceName string `form:"serviceName" binding:"required"`               // 应用名
+	Endpoint    string `form:"endpoint" binding:"required"`
+}
+
 type GetServiceInstanceOptionsRequest struct {
 	StartTime   int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
 	EndTime     int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
@@ -201,11 +209,17 @@ type GetAlertEventsSampleRequest struct {
 }
 
 type GetServiceEntryEndpointsRequest struct {
-	StartTime int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
-	EndTime   int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
-	Service   string `form:"service" binding:"required"`                   // 查询服务名
-	Endpoint  string `form:"endpoint" binding:"required"`                  // 查询Endpoint
-	Step      int64  `form:"step" binding:"required"`                      // 查询步长(us)
+	StartTime   int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
+	EndTime     int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
+	Service     string `form:"service" binding:"required"`                   // 查询服务名
+	Endpoint    string `form:"endpoint" binding:"required"`                  // 查询Endpoint
+	Step        int64  `form:"step" binding:"required"`                      // 查询步长(us)
+	ShowMissTop bool   `form:"showMissTop"`                                  // 是否显示丢失后的非入口服务
+}
+
+type GetMonitorStatusRequest struct {
+	StartTime int64 `form:"startTime" binding:"min=0"`                    // 查询开始时间
+	EndTime   int64 `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
 }
 
 type GetAnomalySpanRequest struct {

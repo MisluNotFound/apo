@@ -1,11 +1,19 @@
 export const logsInitialState = {
-  database: '',
-  tableName: '',
-  logRule: {},
+  tableInfo: {
+    dataBase: '',
+    tableName: '',
+    parseName: '',
+
+    cluster: '',
+    instanceName: '',
+    timeField: '',
+  },
+  logRules: [],
+  instances: [],
   logs: [],
   pagination: {
     pageIndex: 1,
-    pageSize: 10,
+    pageSize: 50,
     total: 0,
   },
 
@@ -13,7 +21,10 @@ export const logsInitialState = {
   defaultFields: [],
 
   hiddenFields: [],
+  //最终的query 会触发查询
   query: '',
+  //searchValue 当前框值，不处罚查询
+  searchValue: '',
   loading: true,
 
   // 保存字段和index索引map 当dataBase、时间改变清空
@@ -38,15 +49,28 @@ const logsReducer = (state = logsInitialState, action) => {
       return { ...state, loading: action.payload }
     case 'updateDataBase':
       return { ...state, database: action.payload }
-    case 'updateTableName':
-      return { ...state, tableName: action.payload }
+    case 'updateTableInfo':
+      // 选择库变了 indexmapp必须变
+      return {
+        ...state,
+        tableInfo: action.payload,
+        fieldIndexMap: {},
+        defaultFields: [],
+        hiddenFields: [],
+      }
     case 'setLogState':
       return { ...state, ...action.payload }
     case 'updateFieldIndexMap':
       //增量更新
       return { ...state, fieldIndexMap: { ...state.fieldIndexMap, ...action.payload } }
+    case 'setLogRules':
+      return { ...state, logRules: action.payload }
+    case 'setInstances':
+      return { ...state, instances: action.payload }
+    case 'setSearchValue':
+      return { ...state, searchValue: action.payload }
     case 'clearFieldIndexMap':
-      return { ...state, fieldIndexMap: {} }
+      return { ...state, fieldIndexMap: {}, defaultFields: [], hiddenFields: [] }
     default:
       return state
   }

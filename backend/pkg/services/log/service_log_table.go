@@ -9,23 +9,32 @@ import (
 )
 
 const (
-	defaultParseName = "default_java"
-	defaultRouteRule = `."k8s.namespace.name" != "apo"`
-	defaultParseRule = `.msg, err = parse_regex(.content, r'\[(?P<thread>.*?)\] (?P<level>.*?)  (?P<method>.*?) - (?P<msg>.*)')
+	defaultParseInfo = "默认应用Java格式的日志解析规则, 从满足条件的日志中解析出level、thread、method信息"
+	defaultParseName = "all_logs"
+	defaultRouteRule = `starts_with(string!(."k8s.pod.name"), "apo")`
+	defaultParseRule = `.msg, err = parse_regex(.content, r' \[(?P<level>.*?)\] \[(?P<thread>.*?)\] \[(?P<method>.*?)\(.*?\)\] - (?P<msg>.*)')
 if err == null {
 	.content = encode_json(.msg)
 }
-del(.msg)`
+del(.msg)
+`
 )
+
+var defaultRouteRuleMap = map[string]string{
+	"k8s.pod.name": "apo",
+}
 
 func (s *service) CreateLogTable(req *request.LogTableRequest) (*response.LogTableResponse, error) {
 	sqls, err := s.chRepo.CreateLogTable(req)
+	res := &response.LogTableResponse{Sqls: sqls}
 	if err != nil {
-		return nil, err
+		res.Err = err.Error()
+		return res, nil
 	}
 	fieldsJSON, err := json.Marshal(req.Fields)
 	if err != nil {
-		return nil, err
+		res.Err = err.Error()
+		return res, nil
 	}
 	logtable := &database.LogTableInfo{
 		Cluster:   req.Cluster,
@@ -35,18 +44,28 @@ func (s *service) CreateLogTable(req *request.LogTableRequest) (*response.LogTab
 		ParseName: defaultParseName,
 		RouteRule: defaultRouteRule,
 		ParseRule: defaultParseRule,
+		ParseInfo: defaultParseInfo,
 	}
-	err = s.dbRepo.OperateLogTableInfo(logtable, database.INSERT)
+	// 不存在才去插入logtableinfo
+	err = s.dbRepo.OperateLogTableInfo(logtable, database.QUERY)
 	if err != nil {
-		return nil, err
+		err = s.dbRepo.OperateLogTableInfo(logtable, database.INSERT)
+		if err != nil {
+			res.Err = err.Error()
+			return res, nil
+		}
 	}
-	return &response.LogTableResponse{Sqls: sqls}, nil
+
+	return res, nil
 }
 
 func (s *service) DropLogTable(req *request.LogTableRequest) (*response.LogTableResponse, error) {
+
 	sqls, err := s.chRepo.DropLogTable(req)
+	res := &response.LogTableResponse{Sqls: sqls}
 	if err != nil {
-		return nil, err
+		res.Err = err.Error()
+		return res, nil
 	}
 	logtable := &database.LogTableInfo{
 		Cluster:  req.Cluster,
@@ -55,12 +74,13 @@ func (s *service) DropLogTable(req *request.LogTableRequest) (*response.LogTable
 	}
 	err = s.dbRepo.OperateLogTableInfo(logtable, database.DELETE)
 	if err != nil {
-		return nil, err
+		res.Err = err.Error()
 	}
-	return &response.LogTableResponse{Sqls: sqls}, nil
+	return res, nil
 }
 
 func (s *service) UpdateLogTable(req *request.LogTableRequest) (*response.LogTableResponse, error) {
+	res := &response.LogTableResponse{}
 	logtable := &database.LogTableInfo{
 		Cluster:  req.Cluster,
 		DataBase: req.DataBase,
@@ -85,7 +105,11 @@ func (s *service) UpdateLogTable(req *request.LogTableRequest) (*response.LogTab
 			newFields = append(newFields, field)
 		}
 	}
+	if len(newFields) == 0 {
+		return res, nil
+	}
 	sqls, err := s.chRepo.UpdateLogTable(req, newFields, fields)
+	res.Sqls = sqls
 	if err != nil {
 		return nil, err
 	}
@@ -98,5 +122,5 @@ func (s *service) UpdateLogTable(req *request.LogTableRequest) (*response.LogTab
 	if err != nil {
 		return nil, err
 	}
-	return &response.LogTableResponse{Sqls: sqls}, nil
+	return res, nil
 }

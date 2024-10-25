@@ -106,6 +106,9 @@ func (ch *chRepo) ListEntryEndpoints(req *request.GetServiceEntryEndpointsReques
 		Between("timestamp", startTime, endTime).
 		Equals("nodes.service", req.Service).
 		Equals("nodes.url", req.Endpoint)
+	if !req.ShowMissTop {
+		queryBuilder.Equals("miss_top", false)
+	}
 	results := []EntryNode{}
 	sql := fmt.Sprintf(SQL_GET_ENTRY_NODES, queryBuilder.String())
 	if err := ch.conn.Select(context.Background(), &results, sql, queryBuilder.values...); err != nil {

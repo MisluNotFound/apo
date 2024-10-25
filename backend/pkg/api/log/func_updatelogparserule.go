@@ -8,7 +8,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 )
 
-// GetLogParseRule 更新日志表解析规则
+// UpdateLogParseRule 更新日志表解析规则
 // @Summary 更新日志表解析规则
 // @Description 更新日志表解析规则
 // @Tags API.log
@@ -34,7 +34,7 @@ func (h *handler) UpdateLogParseRule() core.HandlerFunc {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.UpdateLogParseRuleError,
-				code.Text(code.UpdateLogParseRuleError)).WithError(err),
+				code.Text(code.UpdateLogParseRuleError)+": "+err.Error()).WithError(err),
 			)
 			return
 		}
