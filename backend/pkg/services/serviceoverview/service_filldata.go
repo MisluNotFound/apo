@@ -251,11 +251,6 @@ func (s *service) fillMetric(res *EndpointsMap, metricGroup prom.MGroupName, sta
 	res.MergeMetricResults(metricGroup, prom.THROUGHPUT, tps)
 }
 
-func (s *service) EndpointsRealtimeREDMetric(filter EndpointsFilter, endpointsMap *EndpointsMap, startTime time.Time, endTime time.Time) {
-	filters := filter.ExtractFilterStr()
-	s.promRepo.FillMetric(endpointsMap, prom.REALTIME, startTime, endTime, filters, prom.EndpointGranularity)
-}
-
 // EndpointsDelaySource 填充延时来源
 // 基于输入的Endpoints填充, 会抛弃Endpoints中不存在的记录
 func (s *service) EndpointsDelaySource(endpoints *EndpointsMap, startTime, endTime time.Time, filters []string) error {

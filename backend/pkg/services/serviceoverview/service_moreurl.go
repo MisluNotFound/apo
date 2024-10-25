@@ -20,7 +20,6 @@ func (s *service) GetServiceMoreUrl(startTime time.Time, endTime time.Time, step
 		prom.ServicePQLFilter, serviceName,
 	}
 
-	filters := filter.ExtractFilterStr()
 	endpointsMap := s.EndpointsREDMetric(startTime, endTime, filters)
 	endpoints := endpointsMap.MetricGroupList
 
