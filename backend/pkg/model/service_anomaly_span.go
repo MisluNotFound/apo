@@ -1,7 +1,7 @@
 package model
 
 const (
-	CPU_TIME        = "cpu"
+	CPU_TIME        = "cpu_time"
 	NETWORK_TIME    = "network_time"
 	LOCK_GC_TINME   = "lock_gc_time"
 	DISK_IO_TIME    = "disk_io_time"
