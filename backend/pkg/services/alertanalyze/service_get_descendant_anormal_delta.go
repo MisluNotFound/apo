@@ -54,7 +54,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		// 构建好子孙节点的Node/Service -> descendant 映射
 		endpoint := model.EndpointKey{
 			ServiceName: descendant.Service,
-			ContentKey:  descendant.Endpoint,
+			Endpoint:    descendant.Endpoint,
 		}
 		instancesForDescendant := instanceList.GetInstances()
 		instanceMap.AddInstances(endpoint, instancesForDescendant)
@@ -416,7 +416,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 // 	return anormalEventList, nil
 // }
 
-func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *InstanceMap, step int64) []model.AnormalEvent {
+func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *instanceMap, step int64) []model.AnormalEvent {
 	var anormalEventList []model.AnormalEvent
 	for _, propagation := range propagations {
 		errorEvent := model.AnormalEvent{
@@ -447,7 +447,7 @@ func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *I
 			}
 			endpointKey := model.EndpointKey{
 				ServiceName: service,
-				ContentKey:  propagation.NodesUrl[idx],
+				Endpoint:    propagation.NodesUrl[idx],
 			}
 			// 检查ContentKey是否在endpoints中
 			if !instanceMap.IsEndpointKeyExist(endpointKey) {
@@ -468,7 +468,7 @@ func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *I
 	return anormalEventList
 }
 
-func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap *InstanceMap, selectedEvents []string, searchStartTime int64) []model.AnormalEvent {
+func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap *instanceMap, selectedEvents []string, searchStartTime int64) []model.AnormalEvent {
 	var anormalEventList []model.AnormalEvent
 
 	for i := 0; i < len(alertEvents); i++ {
@@ -511,7 +511,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 			anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
 				EndpointKey: model.EndpointKey{
 					ServiceName: alertEvent.GetServiceNameTag(),
-					ContentKey:  alertEvent.GetContentKeyTag(),
+					Endpoint:    alertEvent.GetContentKeyTag(),
 				},
 				AlertKey:     alertEvent.AlertKey,
 				AlertObject:  alertEvent.GetTargetObj(),
@@ -607,7 +607,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 	return anormalEventList
 }
 
-type InstanceMap struct {
+type instanceMap struct {
 	Pod2InstanceMap     map[K8sPodNSKey]model.ServiceInstance
 	NodePid2InstanceMap map[NodePidKey]model.ServiceInstance
 	Node2InstancesMap   map[string]map[model.ServiceInstance]struct{}
@@ -627,8 +627,8 @@ type K8sPodNSKey struct {
 	Pod       string
 }
 
-func newInstanceMap() *InstanceMap {
-	return &InstanceMap{
+func newInstanceMap() *instanceMap {
+	return &instanceMap{
 		Pod2InstanceMap:     map[K8sPodNSKey]model.ServiceInstance{},
 		NodePid2InstanceMap: map[NodePidKey]model.ServiceInstance{},
 		Node2InstancesMap:   map[string]map[model.ServiceInstance]struct{}{},
@@ -637,7 +637,7 @@ func newInstanceMap() *InstanceMap {
 	}
 }
 
-func (m *InstanceMap) AddInstances(endpointKey model.EndpointKey, instances []*model.ServiceInstance) {
+func (m *instanceMap) AddInstances(endpointKey model.EndpointKey, instances []*model.ServiceInstance) {
 	m.EndpointMap[endpointKey] = struct{}{}
 
 	for _, instance := range instances {
@@ -667,7 +667,7 @@ func (m *InstanceMap) AddInstances(endpointKey model.EndpointKey, instances []*m
 	}
 }
 
-func (m *InstanceMap) GetEndpointsByK8sPodNS(pod, namespace string) (*model.ServiceInstance, []model.EndpointKey) {
+func (m *instanceMap) GetEndpointsByK8sPodNS(pod, namespace string) (*model.ServiceInstance, []model.EndpointKey) {
 	instance, find := m.Pod2InstanceMap[K8sPodNSKey{namespace, pod}]
 	if !find {
 		return nil, nil
@@ -684,7 +684,7 @@ func (m *InstanceMap) GetEndpointsByK8sPodNS(pod, namespace string) (*model.Serv
 	return &instance, endpoints
 }
 
-func (m *InstanceMap) GetEndpointsByNodePid(node string, pid string) (*model.ServiceInstance, []model.EndpointKey) {
+func (m *instanceMap) GetEndpointsByNodePid(node string, pid string) (*model.ServiceInstance, []model.EndpointKey) {
 	if len(pid) == 0 {
 
 	}
@@ -709,7 +709,7 @@ func (m *InstanceMap) GetEndpointsByNodePid(node string, pid string) (*model.Ser
 	return &instance, endpoints
 }
 
-func (m *InstanceMap) GetEndpointsByNode(node string) map[model.ServiceInstance][]model.EndpointKey {
+func (m *instanceMap) GetEndpointsByNode(node string) map[model.ServiceInstance][]model.EndpointKey {
 	instances, find := m.Node2InstancesMap[node]
 	if !find || len(instances) == 0 {
 		return nil
@@ -732,7 +732,7 @@ func (m *InstanceMap) GetEndpointsByNode(node string) map[model.ServiceInstance]
 	return res
 }
 
-func (m *InstanceMap) IsEndpointKeyExist(endpointKey model.EndpointKey) bool {
+func (m *instanceMap) IsEndpointKeyExist(endpointKey model.EndpointKey) bool {
 	_, find := m.EndpointMap[endpointKey]
 	return find
 }

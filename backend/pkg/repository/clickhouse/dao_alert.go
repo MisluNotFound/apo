@@ -266,7 +266,7 @@ func extractFilter(filter request.AlertFilter, endpoints []model.EndpointKey, in
 			}
 			for _, endpoint := range endpoints {
 				whereEndpoints.ValueGroups = append(whereEndpoints.ValueGroups, clickhouse.GroupSet{
-					Value: []any{endpoint.ServiceName, endpoint.ContentKey},
+					Value: []any{endpoint.ServiceName, endpoint.Endpoint},
 				})
 			}
 			whereInstance = append(whereInstance, MergeWheres(

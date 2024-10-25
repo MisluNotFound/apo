@@ -67,7 +67,7 @@ func (ch *chRepo) ListErrorByEntryService(startTime, endTime int64, entryService
 		}
 		for _, endpoint := range endpoints {
 			whereEndpoints.ValueGroups = append(whereEndpoints.ValueGroups, clickhouse.GroupSet{
-				Value: []any{endpoint.ServiceName, endpoint.ContentKey},
+				Value: []any{endpoint.ServiceName, endpoint.Endpoint},
 			})
 		}
 		whereEntry = MergeWheres(

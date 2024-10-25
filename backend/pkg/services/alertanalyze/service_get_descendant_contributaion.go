@@ -3,13 +3,14 @@ package alertanalyze
 import (
 	"time"
 
+	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/polarisanalyzer"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 )
 
-// GetDescendantContribution 获取下游的故障贡献度排序
+// GetDescendantContribution 基于入口获取下游的故障贡献度排序
 func (s *service) GetDescendantContribution(req *request.GetDescendantAlertContributaionRequest) (resp *response.GetDescendantAlertContributationResponse, err error) {
 	// 查询所有子孙节点
 	nodes, err := s.chRepo.ListDescendantNodes(&req.GetDescendantMetricsRequest)
@@ -19,7 +20,7 @@ func (s *service) GetDescendantContribution(req *request.GetDescendantAlertContr
 
 	if len(nodes) == 0 {
 		return &response.GetDescendantAlertContributationResponse{
-			LatencyContributationList: make([]polarisanalyzer.LatencyRelevance, 0),
+			LatencyContributationList: make([]model.EndpointKey, 0),
 		}, nil
 	}
 
@@ -42,13 +43,13 @@ func (s *service) GetDescendantContribution(req *request.GetDescendantAlertContr
 		return &response.GetDescendantAlertContributationResponse{}, err
 	}
 
-	var latencyContributationList []polarisanalyzer.LatencyRelevance
-	if len(sortResp.SortedDescendant) <= 3 {
-		latencyContributationList = sortResp.SortedDescendant
-	} else {
-		latencyContributationList = sortResp.SortedDescendant[:3]
+	var latencyContributationList = []model.EndpointKey{}
+	for i := 0; i < len(sortResp.SortedDescendant) && i < 3; i++ {
+		latencyContributationList = append(latencyContributationList, model.EndpointKey{
+			ServiceName: sortResp.SortedDescendant[i].Service,
+			Endpoint:    sortResp.SortedDescendant[i].Endpoint,
+		})
 	}
-
 	return &response.GetDescendantAlertContributationResponse{
 		LatencyContributationList: latencyContributationList,
 	}, nil

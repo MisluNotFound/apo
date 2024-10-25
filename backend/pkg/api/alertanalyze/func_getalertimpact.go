@@ -72,7 +72,7 @@ func (h *handler) GetAlertImpact() core.HandlerFunc {
 		}
 
 		// 填充EntryEndpoint信息
-		resp, err := fillEntryNodeDetail(h.serviceoverviewService, req, entryNodes, relatedEventCounts)
+		resp, err := fillEntryNodeDetail(h.serviceoverviewService, req, entryNodes)
 		if err != nil {
 			// 查询失败
 			c.AbortWithError(core.Error(
@@ -95,7 +95,7 @@ func fillRelatedAlertRate(resp *response.GetAlertImpactResponse, relatedEventCou
 	for _, entryEndpoint := range resp.Data {
 		key := model.EndpointKey{
 			ServiceName: entryEndpoint.ServiceName,
-			ContentKey:  entryEndpoint.Endpoint,
+			Endpoint:    entryEndpoint.Endpoint,
 		}
 		relatedAlertCount, find := relatedEventCounts[key]
 		if find {
@@ -108,7 +108,7 @@ func fillRelatedAlertRate(resp *response.GetAlertImpactResponse, relatedEventCou
 
 // fillEntryNodeDetail 填充EntryEndpoint信息
 // 复制于 backend/pkg/api/service/func_getserviceentryendpoints.go
-func fillEntryNodeDetail(s serviceoverview.Service, req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations, relatedEventCounts map[model.EndpointKey]int) (*response.GetAlertImpactResponse, error) {
+func fillEntryNodeDetail(s serviceoverview.Service, req *request.AlertImpactRequest, entryNodes []clickhouse.EntryNodeRelations) (*response.GetAlertImpactResponse, error) {
 	resp := response.GetAlertImpactResponse{
 		Data: make([]*response.EndpointData, 0),
 	}

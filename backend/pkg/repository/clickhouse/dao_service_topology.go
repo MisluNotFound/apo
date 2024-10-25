@@ -117,9 +117,9 @@ func (ch *chRepo) ListEntryEndpoints(req *request.GetServiceEntryEndpointsReques
 // AlertService 告警节点,作为查询入口节点的参数
 type AlertService struct {
 	ServiceName string `json:"serviceName"`
-	// 当ContentKey为空时,表示忽略ContentKey
-	// 当ContentKey不为空时，表示只查询对应ContentKey的数据,用于App Alert时更准确的定位入口节点
-	ContentKey string `json:"contentKey"`
+	// 当Endpoint为空时,表示忽略Endpoint
+	// 当Endpoint不为空时，表示只查询对应Endpoint的数据,用于App Alert时更准确的定位入口节点
+	Endpoint string `json:"endpoint"`
 }
 
 func (ch *chRepo) SearchEntryEndpointsByAlertService(
@@ -139,9 +139,9 @@ func (ch *chRepo) SearchEntryEndpointsByAlertService(
 	}
 
 	for _, endpoint := range alertServices {
-		if len(endpoint.ContentKey) > 0 {
+		if len(endpoint.Endpoint) > 0 {
 			endpoints.ValueGroups = append(endpoints.ValueGroups, clickhouse.GroupSet{
-				Value: []any{endpoint.ServiceName, endpoint.ContentKey},
+				Value: []any{endpoint.ServiceName, endpoint.Endpoint},
 			})
 		} else {
 			services.ValueGroups = append(services.ValueGroups, clickhouse.GroupSet{
@@ -152,6 +152,7 @@ func (ch *chRepo) SearchEntryEndpointsByAlertService(
 
 	queryBuilder := NewQueryBuilder().
 		Between("timestamp", startTime, endTime).
+		Equals("miss_top", false).
 		And(MergeWheres(OrSep, InGroup(endpoints), InGroup(services)))
 
 	results := []EntryNodeRelations{}

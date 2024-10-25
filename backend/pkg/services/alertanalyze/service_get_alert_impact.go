@@ -37,7 +37,7 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 		PodSet:       map[podKey][]clickhouse.AlertService{},
 		NetSrcSet:    map[netSrcProcessKey][]clickhouse.AlertService{},
 	}
-	// TODO 增加关联告警百分比
+
 	var impactEvents = make([]response.ImpactAlertEvent, len(events))
 	for i := 0; i < len(events); i++ {
 		if req.AnalyzeSize == 0 && i > 50000 || req.AnalyzeSize != 0 && i > req.AnalyzeSize {
@@ -58,8 +58,8 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 		}
 	}
 
+	// 所有告警涉及到的服务
 	endpoints := endpointsMap.EndpointsList()
-
 	// 查询入口和下游服务节点的关联
 	entryRelation, err := s.chRepo.SearchEntryEndpointsByAlertService(endpoints, startTime.UnixMicro(), endTime.UnixMicro())
 	if err != nil {
@@ -204,7 +204,7 @@ func searchEntryRelations(relations []clickhouse.EntryNodeRelations, endpoints [
 	for _, relation := range relations {
 		for _, endpoint := range endpoints {
 			// endpoint.ContentKey 为空表示整个服务都收到该Alert的影响
-			if len(endpoint.ContentKey) > 0 && endpoint.ContentKey != relation.DescendantEndpoint {
+			if len(endpoint.Endpoint) > 0 && endpoint.Endpoint != relation.DescendantEndpoint {
 				continue
 			}
 			if endpoint.ServiceName != relation.DescendantService {
@@ -212,7 +212,7 @@ func searchEntryRelations(relations []clickhouse.EntryNodeRelations, endpoints [
 			}
 			entryKey := model.EndpointKey{
 				ServiceName: relation.Service,
-				ContentKey:  relation.Endpoint,
+				Endpoint:    relation.Endpoint,
 			}
 			if _, find := tmpEntrySet[entryKey]; find {
 				continue
@@ -249,6 +249,11 @@ func tryGetAlertService(repo prometheus.Repo, endpointsMap *EndpointsMap, event 
 			checkedError.AddCheckedGroup(vErr)
 			continue
 		}
+		var vErr2 model.ErrAlertImpactNotFit
+		if errors.As(err, &vErr2) {
+			// 跳过不适合的搜寻方式
+			continue
+		}
 		// 其他错误,直接返回
 		return nil, err
 	}
@@ -268,7 +273,7 @@ func tryGetAlertServiceByService(_ prometheus.Repo, endpointsMap *EndpointsMap, 
 	alertServices := []clickhouse.AlertService{
 		{
 			ServiceName: serviceName,
-			ContentKey:  event.GetContentKeyTag(),
+			Endpoint:    event.GetContentKeyTag(),
 		},
 	}
 
@@ -373,7 +378,6 @@ func tryGetAlertServiceByNetSrcVM(repo prometheus.Repo, endpointsMap *EndpointsM
 
 	if endpointsMap != nil {
 		endpointsMap.NetSrcSet[processKey] = endpoints
-
 		for _, endpoint := range endpoints {
 			endpointsMap.EndpointSet[endpoint] = struct{}{}
 		}
@@ -390,6 +394,13 @@ func tryGetAlertServiceByNetSrcVM(repo prometheus.Repo, endpointsMap *EndpointsM
 }
 
 func tryGetAlertServiceByInfraNode(repo prometheus.Repo, endpointsMap *EndpointsMap, event *model.AlertEvent, startTime time.Time, endTime time.Time) ([]clickhouse.AlertService, error) {
+	if event.Group != string(clickhouse.INFRA_GROUP) {
+		return nil, model.ErrAlertImpactNotFit{
+			TagGroup: []string{"instance_name"},
+			Group:    event.Group,
+		}
+	}
+
 	nodeName := event.GetInfraNodeTag()
 	if len(nodeName) == 0 {
 		return nil, model.ErrAlertImpactMissingTag{

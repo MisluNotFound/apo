@@ -9,7 +9,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
-// 查询入口节点的下游告警情况
+// GetDescendantAnormal 查询入口节点的下游告警情况
 func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventRequest) (*response.GetDescendantAnormalEventResponse, error) {
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
@@ -41,7 +41,7 @@ func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventReq
 	for _, node := range nodes {
 		endpointList = append(endpointList, model.EndpointKey{
 			ServiceName: node.Service,
-			ContentKey:  node.Endpoint,
+			Endpoint:    node.Endpoint,
 		})
 
 		if _, find := tmpServiceSet[node.Service]; find {

@@ -274,7 +274,7 @@ type ImpactAlertEvent struct {
 
 type GetDescendantAlertContributationResponse struct {
 	// 延时曲线相似度前三的节点
-	LatencyContributationList []polarisanalyzer.LatencyRelevance `json:"latencyContributationList"`
+	LatencyContributationList []model.EndpointKey `json:"latencyContributationList"`
 }
 
 type EntryInstanceData struct {

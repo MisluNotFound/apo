@@ -50,10 +50,10 @@ type AnormalEventDetail struct {
 }
 
 func (d *AnormalEventDetail) GetEventKey() string {
-	return fmt.Sprintf("%s-%s:%s", d.EndpointKey.ServiceName, d.EndpointKey.ContentKey, d.AlertKey)
+	return fmt.Sprintf("%s-%s:%s", d.EndpointKey.ServiceName, d.EndpointKey.Endpoint, d.AlertKey)
 }
 
 type EndpointKey struct {
 	ServiceName string `json:"serviceName"`
-	ContentKey  string `json:"contentKey"`
+	Endpoint    string `json:"endpoint"`
 }

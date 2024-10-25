@@ -21,6 +21,15 @@ func NewErrWithMessage(err error, code string) ErrWithMessage {
 	}
 }
 
+type ErrAlertImpactNotFit struct {
+	TagGroup
+	Group string
+}
+
+func (e ErrAlertImpactNotFit) Error() string {
+	return fmt.Sprintf("cannon fit search condition: group %s cannot search instance by %s", e.Group, e.TagGroup)
+}
+
 type ErrAlertImpactMissingTag struct {
 	TagGroups []TagGroup
 	Event     *AlertEvent

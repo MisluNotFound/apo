@@ -57,14 +57,14 @@ func newEndpointDepthMatrix(entryService, entryEndpoint string, relations []clic
 	}
 	root := model.EndpointKey{
 		ServiceName: entryService,
-		ContentKey:  entryEndpoint,
+		Endpoint:    entryEndpoint,
 	}
 	matrix.EndpointSet[root] = 0
 	matrix.EndpointKeys = append(matrix.EndpointKeys, root)
 	for _, relation := range relations {
 		childEndpoint := model.EndpointKey{
 			ServiceName: relation.Service,
-			ContentKey:  relation.Endpoint,
+			Endpoint:    relation.Endpoint,
 		}
 		_, find := matrix.EndpointSet[childEndpoint]
 		if !find {
@@ -74,7 +74,7 @@ func newEndpointDepthMatrix(entryService, entryEndpoint string, relations []clic
 		}
 		parentEndpoint := model.EndpointKey{
 			ServiceName: relation.ParentService,
-			ContentKey:  relation.ParentEndpoint,
+			Endpoint:    relation.ParentEndpoint,
 		}
 		_, find = matrix.EndpointSet[parentEndpoint]
 		if !find {
@@ -98,11 +98,11 @@ func newEndpointDepthMatrix(entryService, entryEndpoint string, relations []clic
 func (m *EndpointDepthMatrix) AddRelation(relation clickhouse.ToplogyRelation) {
 	parentEndpoint := model.EndpointKey{
 		ServiceName: relation.ParentService,
-		ContentKey:  relation.ParentEndpoint,
+		Endpoint:    relation.ParentEndpoint,
 	}
 	childEndpoint := model.EndpointKey{
 		ServiceName: relation.Service,
-		ContentKey:  relation.Endpoint,
+		Endpoint:    relation.Endpoint,
 	}
 	parentIdx := m.EndpointSet[parentEndpoint]
 	childIdx := m.EndpointSet[childEndpoint]
@@ -114,13 +114,13 @@ func (m *EndpointDepthMatrix) MaxDepth(service, endpoint string) (int, bool) {
 		return -1, false
 	}
 
-	if m.EndpointKeys[0].ServiceName == service && m.EndpointKeys[0].ContentKey == endpoint {
+	if m.EndpointKeys[0].ServiceName == service && m.EndpointKeys[0].Endpoint == endpoint {
 		return 0, true
 	}
 
 	endpointIdx, find := m.EndpointSet[model.EndpointKey{
 		ServiceName: service,
-		ContentKey:  endpoint,
+		Endpoint:    endpoint,
 	}]
 	if !find {
 		return -1, false
@@ -156,13 +156,13 @@ func (m *EndpointDepthMatrix) dfs(node int, target int, visited []bool, currentD
 func (m *EndpointDepthMatrix) EndpointsLevel() []response.TopologyNodeLevel {
 	var res []response.TopologyNodeLevel
 	for _, endpoint := range m.EndpointKeys {
-		depth, find := m.MaxDepth(endpoint.ServiceName, endpoint.ContentKey)
+		depth, find := m.MaxDepth(endpoint.ServiceName, endpoint.Endpoint)
 		if !find {
 			depth = -1
 		}
 		res = append(res, response.TopologyNodeLevel{
 			Service:  endpoint.ServiceName,
-			Endpoint: endpoint.ContentKey,
+			Endpoint: endpoint.Endpoint,
 			Depth:    depth,
 		})
 	}
