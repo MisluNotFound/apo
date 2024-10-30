@@ -113,6 +113,7 @@ const (
 	MutationPQLCheckFailed                       = "B0733"
 	AlertAnalyzeDescendantAnormalEventError      = "B0734"
 	AlertAnalyzeDescendantAnormalContribution    = "B0735"
+	DetectDefectsError                           = "B0736"
 
 	GetMonitorStatusError = "B0801"
 )

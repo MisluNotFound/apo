@@ -55,9 +55,6 @@ type GetDescendantAnormalDeltaEventRequest struct {
 
 	AnormalTypes string `form:"anormalTypes" json:"anormalTypes"` //要查询的异常类型
 
-	MutataionCheckPQL  string `form:"mutationCheckPOL" json:"mutationCheckPQL"`     // 需要执行故障检测的语句
-	MutationUpperLimit string `form:"mutationUpperLimit" json:"mutationUpperLimit"` // 故障检测上限,使用数学表达式和内置变量(avg.1h,pct.99)
-	MutationLowerLimit string `form:"mutationLowerLimit" json:"mutationLowerLimit"` // 故障检测下限
 }
 
 type GetPolarisInferRequest struct {

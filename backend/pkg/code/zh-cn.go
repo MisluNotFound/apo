@@ -99,4 +99,6 @@ var zhCnText = map[string]string{
 
 	AlertAnalyzeDescendantAnormalEventError:   "获取下游异常事件失败",
 	AlertAnalyzeDescendantAnormalContribution: "获取下游异常事件贡献失败",
+
+	DetectDefectsError: "异常分析失败",
 }

@@ -38,6 +38,16 @@ type Handler interface {
 	// @Tags API.alerts
 	// @Router /api/alerts/anomaly-span/list [post]
 	GetAnomalySpan() core.HandlerFunc
+
+	// GetPredefinedDetectExpr 获取预定义检测表达式
+	// @Tags API.alerts
+	// @Router /api/alerts/detect/mutation/metrics [get]
+	GetPredefinedDetectExpr() core.HandlerFunc
+
+	// AddDefectsDetect 执行异常检测
+	// @Tags API.alerts
+	// @Router /api/alerts/detect/mutation/add [post]
+	AddDefectsDetect() core.HandlerFunc
 }
 
 type handler struct {

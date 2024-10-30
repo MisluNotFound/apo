@@ -9,6 +9,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
+	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	ck "github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
@@ -32,6 +33,11 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	if err != nil {
 		return nil, err
 	}
+
+	descendants = append(descendants, clickhouse.TopologyNode{
+		Service:  req.Service,
+		Endpoint: req.Endpoint,
+	})
 
 	var selectedEvents []string
 	if len(req.AnormalTypes) > 0 {
@@ -96,19 +102,6 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		}
 	}
 
-	// if len(req.MutataionCheckPQL) > 0 && contains(selectedEvents, mutationEvent) {
-	// 	// 用户自定义指标突变
-	// 	anormalMutations, err := s.doMutationCheck(req, startTime, endTime, instanceMap)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	anormalEventList = append(anormalEventList, anormalMutations...)
-	// }
-
-	// sort.SliceStable(anormalEventList, func(i, j int) bool {
-	// 	return anormalEventList[i].Timestamp < anormalEventList[j].Timestamp
-	// })
-
 	// 按Step分组并生成Chart, 统计每个Step时间段内未解决的异常数量
 	anormalCount := response.TempChartObject{
 		ChartData: map[int64]float64{},
@@ -156,6 +149,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 						anormalCount.ChartData[ts] = count + float64(len(event.ImpactEndpoints))
 					}
 				}
+				startFiring = -1
 			}
 
 			// 统计用户时间片前的状态
@@ -581,7 +575,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 		}
 
 		var j = i + 1
-		var lastStatus model.Status
+		var lastStatus model.Status = model.StatusFiring
 		for j < len(alertEvents) {
 			nextEvent := alertEvents[j]
 			if nextEvent.AlertKey != alertEvent.AlertKey {
@@ -600,7 +594,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 			}
 			j++
 			// 后续处理时跳过已经完成处理的事件
-			i = j + 1
+			i = j
 		}
 		anormalEventList = append(anormalEventList, anormalEvent)
 	}

@@ -80,6 +80,9 @@ func (a *AlertEvent) GetK8sNamespaceTag() string {
 }
 
 func (a *AlertEvent) GetK8sPodTag() string {
+	if pod, find := a.Tags["pod_name"]; find && len(pod) > 0 {
+		return pod
+	}
 	return a.Tags["pod"]
 }
 

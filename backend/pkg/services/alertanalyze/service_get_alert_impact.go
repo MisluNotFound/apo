@@ -26,7 +26,10 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 	}
 
 	// eventId为空,获取所有的告警
-	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{}, nil, nil, clickhouse.OrderAlertByReceivedTime)
+	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{
+		Status: "firing",
+	}, nil, nil, clickhouse.OrderAlertByReceivedTime)
+
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -453,7 +456,7 @@ func tryGetAlertServiceByContainer(repo prometheus.Repo, endpointsMap *Endpoints
 	namespace := event.GetK8sNamespaceTag()
 	if len(podName) == 0 || len(namespace) == 0 {
 		return nil, model.ErrAlertImpactMissingTag{
-			TagGroups: []model.TagGroup{[]string{"pod", "namespace"}},
+			TagGroups: []model.TagGroup{[]string{"pod/pod_name", "namespace"}},
 			Event:     event,
 		}
 	}
@@ -493,7 +496,7 @@ func tryGetAlertServiceByContainer(repo prometheus.Repo, endpointsMap *Endpoints
 
 	if len(endpoints) == 0 {
 		return nil, model.ErrAlertImpactNoMatchedService{
-			TagGroup:  []string{"pod", "namespace"},
+			TagGroup:  []string{"pod/pod_name", "namespace"},
 			TagValues: []string{podName, namespace},
 		}
 	}

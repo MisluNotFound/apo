@@ -1,6 +1,9 @@
 package request
 
-import "github.com/CloudDetail/apo/backend/pkg/model/amconfig"
+import (
+	"github.com/CloudDetail/apo/backend/pkg/model"
+	"github.com/CloudDetail/apo/backend/pkg/model/amconfig"
+)
 
 type InputAlertManagerRequest struct {
 	Receiver          string            `json:"receiver"`
@@ -111,4 +114,19 @@ type CheckAlertRuleRequest struct {
 	AlertRuleFile string `form:"alertRuleFile,omitempty"`
 	Group         string `form:"group" binding:"required"`
 	Alert         string `form:"alert" binding:"required"`
+}
+
+type DetectMutationRequest struct {
+	DetectName     string                `form:"name" json:"name" binding:"required"`          // 告警名
+	MutataionCheck model.DetectExprPart  `form:"mutationCheckPOL" json:"mutationCheckPQL"`     // 需要执行故障检测的语句
+	UpperLimit     *model.DetectExprPart `form:"mutationUpperLimit" json:"mutationUpperLimit"` // 故障检测上限,使用数学表达式和内置变量(avg.1h,pct.99)
+	LowerLimit     *model.DetectExprPart `form:"mutationLowerLimit" json:"mutationLowerLimit"` // 故障检测下限
+
+	StartTime int64 `form:"startTime" json:"startTime" binding:"required"`               // 查询开始时间
+	EndTime   int64 `form:"endTime" json:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
+	Step      int64 `form:"step" json:"step" `                                           // 查询步长(us)
+
+	For string `form:"for" json:"for"` // 突变告警等待时间
+
+	SynchronizeToAlertRules bool `form:"synchronizeToAlertRules" json:"synchronizeToAlertRules"`
 }

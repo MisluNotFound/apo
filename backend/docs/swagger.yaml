@@ -524,12 +524,48 @@ definitions:
         $ref: '#/definitions/model.AlertDetail'
       type: array
     type: object
+  model.DetectExprPart:
+    properties:
+      compareGroup:
+        description: 用于记录可以相互比较的检测表达式
+        type: string
+      customMetric:
+        description: 常量表达式
+        type: string
+      group:
+        description: 用于记录指标所属的告警事件组
+        type: string
+      metric:
+        type: string
+      modifier:
+        $ref: '#/definitions/model.Modifier'
+      name:
+        type: string
+    type: object
   model.EndpointKey:
     properties:
       endpoint:
         type: string
       serviceName:
         type: string
+    type: object
+  model.Modifier:
+    properties:
+      dayOnDay:
+        description: 使用昨日同时段数据
+        type: boolean
+      quantile:
+        description: 百分位数
+        type: string
+      rangeVector:
+        description: 1m/1h/1d
+        type: string
+      scale:
+        description: 倍率
+        type: string
+      weekOnWeek:
+        description: 使用上周同时段数据
+        type: boolean
     type: object
   model.ModifyTableTTLMap:
     properties:
@@ -767,6 +803,42 @@ definitions:
         type: string
       tableName:
         type: string
+    type: object
+  request.DetectMutationRequest:
+    properties:
+      endTime:
+        description: 查询结束时间
+        type: integer
+      for:
+        description: 突变告警等待时间
+        type: string
+      mutationCheckPQL:
+        allOf:
+        - $ref: '#/definitions/model.DetectExprPart'
+        description: 需要执行故障检测的语句
+      mutationLowerLimit:
+        allOf:
+        - $ref: '#/definitions/model.DetectExprPart'
+        description: 故障检测下限
+      mutationUpperLimit:
+        allOf:
+        - $ref: '#/definitions/model.DetectExprPart'
+        description: 故障检测上限,使用数学表达式和内置变量(avg.1h,pct.99)
+      name:
+        description: 告警名
+        type: string
+      startTime:
+        description: 查询开始时间
+        type: integer
+      step:
+        description: 查询步长(us)
+        type: integer
+      synchronizeToAlertRules:
+        type: boolean
+    required:
+    - endTime
+    - name
+    - startTime
     type: object
   request.Field:
     properties:
@@ -1587,6 +1659,13 @@ definitions:
         type: string
       inferMetricsPng:
         type: string
+    type: object
+  response.GetPredefinedDetectExprResponse:
+    properties:
+      predefinedMetrics:
+        additionalProperties:
+          $ref: '#/definitions/model.DetectExprPart'
+        type: object
     type: object
   response.GetSQLMetricsResponse:
     properties:
@@ -2461,6 +2540,49 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 获取下游告警事件
+      tags:
+      - API.alerts
+  /api/alerts/detect/mutation/add:
+    post:
+      consumes:
+      - application/json
+      description: 执行异常检测
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.DetectMutationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 执行异常检测
+      tags:
+      - API.alerts
+  /api/alerts/detect/mutation/metrics:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取预定义检测表达式
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetPredefinedDetectExprResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取预定义检测表达式
       tags:
       - API.alerts
   /api/alerts/event/impact:

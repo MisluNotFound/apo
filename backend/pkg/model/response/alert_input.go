@@ -72,3 +72,7 @@ type GetMetricPQLResponse struct {
 type CheckAlertRuleResponse struct {
 	Available bool `json:"available"`
 }
+
+type GetPredefinedDetectExprResponse struct {
+	PredefinedMetrics map[string]*model.DetectExprPart
+}

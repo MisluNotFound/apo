@@ -439,6 +439,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/detect/mutation/add": {
+            "post": {
+                "description": "执行异常检测",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "执行异常检测",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DetectMutationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/detect/mutation/metrics": {
+            "get": {
+                "description": "获取预定义检测表达式",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取预定义检测表达式",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetPredefinedDetectExprResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/event/impact": {
             "get": {
                 "description": "获取告警数据的影响面",
@@ -4620,6 +4686,32 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DetectExprPart": {
+            "type": "object",
+            "properties": {
+                "compareGroup": {
+                    "description": "用于记录可以相互比较的检测表达式",
+                    "type": "string"
+                },
+                "customMetric": {
+                    "description": "常量表达式",
+                    "type": "string"
+                },
+                "group": {
+                    "description": "用于记录指标所属的告警事件组",
+                    "type": "string"
+                },
+                "metric": {
+                    "type": "string"
+                },
+                "modifier": {
+                    "$ref": "#/definitions/model.Modifier"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "model.EndpointKey": {
             "type": "object",
             "properties": {
@@ -4628,6 +4720,31 @@ const docTemplate = `{
                 },
                 "serviceName": {
                     "type": "string"
+                }
+            }
+        },
+        "model.Modifier": {
+            "type": "object",
+            "properties": {
+                "dayOnDay": {
+                    "description": "使用昨日同时段数据",
+                    "type": "boolean"
+                },
+                "quantile": {
+                    "description": "百分位数",
+                    "type": "string"
+                },
+                "rangeVector": {
+                    "description": "1m/1h/1d",
+                    "type": "string"
+                },
+                "scale": {
+                    "description": "倍率",
+                    "type": "string"
+                },
+                "weekOnWeek": {
+                    "description": "使用上周同时段数据",
+                    "type": "boolean"
                 }
             }
         },
@@ -4976,6 +5093,63 @@ const docTemplate = `{
                 },
                 "tableName": {
                     "type": "string"
+                }
+            }
+        },
+        "request.DetectMutationRequest": {
+            "type": "object",
+            "required": [
+                "endTime",
+                "name",
+                "startTime"
+            ],
+            "properties": {
+                "endTime": {
+                    "description": "查询结束时间",
+                    "type": "integer"
+                },
+                "for": {
+                    "description": "突变告警等待时间",
+                    "type": "string"
+                },
+                "mutationCheckPQL": {
+                    "description": "需要执行故障检测的语句",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.DetectExprPart"
+                        }
+                    ]
+                },
+                "mutationLowerLimit": {
+                    "description": "故障检测下限",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.DetectExprPart"
+                        }
+                    ]
+                },
+                "mutationUpperLimit": {
+                    "description": "故障检测上限,使用数学表达式和内置变量(avg.1h,pct.99)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.DetectExprPart"
+                        }
+                    ]
+                },
+                "name": {
+                    "description": "告警名",
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "查询开始时间",
+                    "type": "integer"
+                },
+                "step": {
+                    "description": "查询步长(us)",
+                    "type": "integer"
+                },
+                "synchronizeToAlertRules": {
+                    "type": "boolean"
                 }
             }
         },
@@ -6176,6 +6350,17 @@ const docTemplate = `{
                 },
                 "inferMetricsPng": {
                     "type": "string"
+                }
+            }
+        },
+        "response.GetPredefinedDetectExprResponse": {
+            "type": "object",
+            "properties": {
+                "predefinedMetrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/model.DetectExprPart"
+                    }
                 }
             }
         },

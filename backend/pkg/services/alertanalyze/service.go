@@ -5,6 +5,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
+	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 	"github.com/CloudDetail/apo/backend/pkg/repository/polarisanalyzer"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 )
@@ -29,12 +30,20 @@ type Service interface {
 
 	// SearchAnormalDeltaByEntry 获取节点的所有下游节点的异常趋势
 	SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDeltaEventRequest) (*response.GetDescendantDeltaAnormalEventResponse, error)
+
+	// 获取预定义的检测表达式
+	DetectDefectsOptions() *response.GetPredefinedDetectExprResponse
+
+	// 缺陷检测
+	DetectDefects(req *request.DetectMutationRequest) error
 }
 
 type service struct {
 	chRepo   clickhouse.Repo
 	promRepo prometheus.Repo
 	polRepo  polarisanalyzer.Repo
+
+	k8sRepo kubernetes.Repo
 }
 
 func New(chRepo clickhouse.Repo, promRepo prometheus.Repo, polRepo polarisanalyzer.Repo) Service {
