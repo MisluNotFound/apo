@@ -74,5 +74,5 @@ type CheckAlertRuleResponse struct {
 }
 
 type GetPredefinedDetectExprResponse struct {
-	PredefinedMetrics map[string]*model.DetectExprPart
+	PredefinedMetrics []model.PredefinedMetricExpr `json:"metrics"`
 }

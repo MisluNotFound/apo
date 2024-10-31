@@ -9,7 +9,6 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
-	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	ck "github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
@@ -34,7 +33,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		return nil, err
 	}
 
-	descendants = append(descendants, clickhouse.TopologyNode{
+	descendants = append(descendants, ck.TopologyNode{
 		Service:  req.Service,
 		Endpoint: req.Endpoint,
 	})
@@ -89,7 +88,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		alertEvents, err := s.chRepo.GetAlertEventsWithKeyByInstanceAndEndpoints(
 			startTime, endTime,
 			// 同时获取Firing和Resolved故障
-			request.AlertFilter{},
+			request.AlertFilter{WithMutation: true},
 			instances, endpoints,
 		)
 
@@ -100,15 +99,6 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		} else {
 			return nil, err
 		}
-	}
-
-	// 按Step分组并生成Chart, 统计每个Step时间段内未解决的异常数量
-	anormalCount := response.TempChartObject{
-		ChartData: map[int64]float64{},
-	}
-	// 初始化
-	for i := req.StartTime; i <= req.EndTime; i += req.Step {
-		anormalCount.ChartData[i] = 0
 	}
 
 	originAnormalCounts := map[model.EndpointKey]map[model.AnormalType]int64{}
@@ -128,30 +118,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		deltaEventTS := []model.AnormalUpdateTS{}
 
 		// 填充Chart
-		startFiring := int64(-1)
-		for updateIdx, updateTS := range event.UpdateTSs {
-			if updateIdx == len(event.UpdateTSs)-1 && updateTS.AnormalStatus == model.StatusFiring {
-				if startFiring == -1 {
-					startFiring = updateTS.Timestamp
-				}
-				for ts, count := range anormalCount.ChartData {
-					if ts >= startFiring {
-						anormalCount.ChartData[ts] = count + float64(len(event.ImpactEndpoints))
-					}
-				}
-			} else if startFiring == -1 && updateTS.AnormalStatus == model.StatusFiring {
-				// 新的一次告警
-				startFiring = updateTS.Timestamp
-			} else if startFiring != -1 && updateTS.AnormalStatus == model.StatusResolved {
-				// 结算之前的告警
-				for ts, count := range anormalCount.ChartData {
-					if ts >= startFiring && ts < updateTS.Timestamp {
-						anormalCount.ChartData[ts] = count + float64(len(event.ImpactEndpoints))
-					}
-				}
-				startFiring = -1
-			}
-
+		for _, updateTS := range event.UpdateTSs {
 			// 统计用户时间片前的状态
 			if updateTS.Timestamp < req.DeltaStartTime {
 				isFiringBefore = updateTS.AnormalStatus
@@ -268,7 +235,6 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	}
 
 	return &response.GetDescendantDeltaAnormalEventResponse{
-		AnormalCount:        anormalCount,
 		OriginAnormalCounts: originAnormalCountsList,
 		FinalAnormalCounts:  finalAnormalCountsList,
 
@@ -277,138 +243,6 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		FinalAnormalEvents:  finalAnrmalEvents,
 	}, nil
 }
-
-// func (s *service) doMutationCheck(req *request.GetDescendantAnormalEventRequest, startTime time.Time, endTime time.Time, instanceMap *InstanceMap) ([]model.AnormalEvent, error) {
-// 	mutationCheck := &prometheus.MutationPQLCheck{
-// 		PQL:        req.MutataionCheckPQL,
-// 		UpperLimit: req.MutationUpperLimit,
-// 		LowerLimit: req.MutationLowerLimit,
-// 	}
-// 	mutationSeries, err := s.promRepo.ExecutedMutationCheck(
-// 		mutationCheck,
-// 		startTime, endTime,
-// 		time.Duration(req.Step)*time.Microsecond,
-// 	)
-// 	if err != nil {
-// 		return nil, model.ErrMutationCheckFailed{
-// 			PQL:        req.MutataionCheckPQL,
-// 			UpperLimit: req.MutationUpperLimit,
-// 			LowerLimit: req.MutationLowerLimit,
-// 			UserMsg:    "自定义指标语法异常",
-// 			Err:        err,
-// 		}
-// 	}
-
-// 	var anormalEventList []model.AnormalEvent
-// 	for _, serie := range mutationSeries {
-// 		if len(serie.Metric.SvcName) > 0 && len(serie.Metric.ContentKey) > 0 {
-// 			labelsStr := fmt.Sprintf("%+v", serie.Metric)
-// 			for _, point := range serie.Values {
-// 				var anormalEvent model.AnormalEvent = model.AnormalEvent{
-// 					Timestamp:       point.TimeStamp,
-// 					AnormalType:     model.AnormalTypeMutation,
-// 					ImpactEndpoints: []model.AnormalEventDetail{},
-// 				}
-// 				anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
-// 					EndpointKey: model.EndpointKey{
-// 						ServiceName: serie.Metric.SvcName,
-// 						ContentKey:  serie.Metric.ContentKey,
-// 					},
-// 					AlertObject:  serie.Metric.SvcName,
-// 					AlertReason:  "应用关联指标突变",
-// 					AlertMessage: mutationCheck.GetMurationMessage(point.Value, labelsStr),
-// 				})
-// 				anormalEventList = append(anormalEventList, anormalEvent)
-// 			}
-// 		} else if len(serie.Metric.Namespace) > 0 && len(serie.Metric.POD) > 0 {
-// 			instance, endpoints := instanceMap.GetEndpointsByK8sPodNS(serie.Metric.POD, serie.Metric.Namespace)
-// 			if instance == nil {
-// 				continue
-// 			}
-
-// 			labelsStr := fmt.Sprintf("%+v", serie.Metric)
-// 			for _, point := range serie.Values {
-// 				var anormalEvent model.AnormalEvent = model.AnormalEvent{
-// 					Timestamp:       point.TimeStamp,
-// 					AnormalType:     model.AnormalTypeMutation,
-// 					ImpactEndpoints: []model.AnormalEventDetail{},
-// 				}
-// 				for _, endpoint := range endpoints {
-// 					anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
-// 						EndpointKey:  endpoint,
-// 						AlertObject:  instance.PodName,
-// 						AlertReason:  "应用关联指标突变",
-// 						AlertMessage: mutationCheck.GetMurationMessage(point.Value, labelsStr),
-// 					})
-// 				}
-// 				anormalEventList = append(anormalEventList, anormalEvent)
-// 			}
-// 		} else if len(serie.Metric.PID) > 0 {
-// 			instance, endpoints := instanceMap.GetEndpointsByNodePid(serie.Metric.NodeName, serie.Metric.PID)
-// 			if instance == nil {
-// 				continue
-// 			}
-
-// 			labelsStr := fmt.Sprintf("%+v", serie.Metric)
-// 			for _, point := range serie.Values {
-// 				var anormalEvent model.AnormalEvent = model.AnormalEvent{
-// 					Timestamp:       point.TimeStamp,
-// 					AnormalType:     model.AnormalTypeMutation,
-// 					ImpactEndpoints: []model.AnormalEventDetail{},
-// 				}
-// 				for _, endpoint := range endpoints {
-// 					anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
-// 						EndpointKey:  endpoint,
-// 						AlertObject:  fmt.Sprintf("(pid:%s) at %s", serie.Metric.PID, instance.NodeName),
-// 						AlertReason:  "应用关联指标突变",
-// 						AlertMessage: mutationCheck.GetMurationMessage(point.Value, labelsStr),
-// 					})
-// 				}
-// 				anormalEventList = append(anormalEventList, anormalEvent)
-// 			}
-// 		} else if len(serie.Metric.NodeName) > 0 {
-// 			endpointsMaps := instanceMap.GetEndpointsByNode(serie.Metric.NodeName)
-// 			if endpointsMaps == nil {
-// 				continue
-// 			}
-
-// 			for instance, endpoints := range endpointsMaps {
-// 				var instanceName string
-// 				if len(instance.PodName) > 0 {
-// 					instanceName = fmt.Sprintf("%s/%s", instance.Namespace, instance.PodName)
-// 				} else {
-// 					instanceName = fmt.Sprintf("(pid:%d)", instance.Pid)
-// 				}
-
-// 				for _, point := range serie.Values {
-// 					var anormalEvent model.AnormalEvent = model.AnormalEvent{
-// 						Timestamp:       point.TimeStamp,
-// 						AnormalType:     model.AnormalTypeMutation,
-// 						ImpactEndpoints: []model.AnormalEventDetail{},
-// 					}
-// 					for _, endpoint := range endpoints {
-// 						anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
-// 							EndpointKey:  endpoint,
-// 							AlertObject:  instanceName + " at " + instance.NodeName,
-// 							AlertReason:  "应用所在主机指标突变",
-// 							AlertMessage: mutationCheck.GetMurationMessage(point.Value, fmt.Sprintf("%+v", serie.Metric)),
-// 						})
-// 					}
-// 					anormalEventList = append(anormalEventList, anormalEvent)
-// 				}
-// 			}
-// 		} else {
-// 			return nil, model.ErrMutationCheckFailed{
-// 				PQL:        req.MutataionCheckPQL,
-// 				UpperLimit: req.MutationUpperLimit,
-// 				LowerLimit: req.MutationLowerLimit,
-// 				UserMsg:    "指标无法关联到具体服务,Label中需要存在(namespace,pod),(node,pid),(node)组合之一",
-// 				Err:        fmt.Errorf("指标无法关联到服务实例: Metric :%s, Labels: %+v\nLabels需要包含下面的label组合之一: (namespace,pod),(node,pid),(node)", req.MutataionCheckPQL, serie.Metric),
-// 			}
-// 		}
-// 	}
-// 	return anormalEventList, nil
-// }
 
 func (*service) parseErrorEvent(propagations []ck.ErrorPropation, instanceMap *instanceMap, step int64) []model.AnormalEvent {
 	var anormalEventList []model.AnormalEvent

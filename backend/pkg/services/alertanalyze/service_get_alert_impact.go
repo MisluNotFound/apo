@@ -27,9 +27,8 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 
 	// eventId为空,获取所有的告警
 	events, count, err := s.chRepo.GetAlertEvents(startTime, endTime, request.AlertFilter{
-		Status: "firing",
+		Status: "firing", WithMutation: true,
 	}, nil, nil, clickhouse.OrderAlertByReceivedTime)
-
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}

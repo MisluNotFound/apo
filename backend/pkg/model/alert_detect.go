@@ -32,6 +32,9 @@ type DetectExprPart struct {
 
 	// 常量表达式
 	CustomMetric string `json:"customMetric"`
+
+	// 用来记录指标的临时排序
+	MetricIdx int `json:"-"`
 }
 
 type PredefinedMetricExpr struct {

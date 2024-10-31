@@ -114,6 +114,7 @@ const (
 	AlertAnalyzeDescendantAnormalEventError      = "B0734"
 	AlertAnalyzeDescendantAnormalContribution    = "B0735"
 	DetectDefectsError                           = "B0736"
+	DetectDefectsCreatAlertError                 = "B0737"
 
 	GetMonitorStatusError = "B0801"
 )

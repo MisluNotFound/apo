@@ -61,7 +61,7 @@ func New(logger *zap.Logger, authType, authFilePath string, setting config.Metad
 
 	ctrl.SetLogger(zapr.NewLogger(logger))
 
-	cli, err := client.New(restConfig, client.Options{})
+	cli, err := client.NewWithWatch(restConfig, client.Options{})
 	if err != nil {
 		return NoneRepo, err
 	}
@@ -106,7 +106,7 @@ func New(logger *zap.Logger, authType, authFilePath string, setting config.Metad
 
 type k8sApi struct {
 	logger *zap.Logger
-	cli    client.Client
+	cli    client.WithWatch
 
 	config.MetadataSettings
 	Metadata

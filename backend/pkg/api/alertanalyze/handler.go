@@ -4,6 +4,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/core"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	"github.com/CloudDetail/apo/backend/pkg/repository/database"
+	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 	polaris "github.com/CloudDetail/apo/backend/pkg/repository/polarisanalyzer"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 	"github.com/CloudDetail/apo/backend/pkg/services/alertanalyze"
@@ -29,7 +30,12 @@ type Handler interface {
 	// @Router /api/alerts/descendant/anormal/list [get]
 	GetDescendantAnormal() core.HandlerFunc
 
-	// GetDescendantAnormalDelta 获取下游异常变化趋势
+	// GetAnormalTrendByEntry 获取下游异常变化趋势
+	// @Tags API.alerts
+	// @Router /api/alerts/descendant/anormal/trend [get]
+	GetAnormalTrendByEntry() core.HandlerFunc
+
+	// GetDescendantAnormalDelta 获取下游异常变化
 	// @Tags API.alerts
 	// @Router /api/alerts/descendant/anormal/delta [get]
 	GetDescendantAnormalDelta() core.HandlerFunc
@@ -56,10 +62,10 @@ type handler struct {
 	serviceoverviewService serviceoverview.Service
 }
 
-func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo, promRepo prometheus.Repo, polRepo polaris.Repo) Handler {
+func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo, promRepo prometheus.Repo, polRepo polaris.Repo, k8sRepo kubernetes.Repo) Handler {
 	return &handler{
 		logger:                 logger,
-		alertanalyzeService:    alertanalyze.New(chRepo, promRepo, polRepo),
+		alertanalyzeService:    alertanalyze.New(chRepo, promRepo, polRepo, k8sRepo),
 		serviceoverviewService: serviceoverview.New(chRepo, dbRepo, promRepo),
 	}
 }

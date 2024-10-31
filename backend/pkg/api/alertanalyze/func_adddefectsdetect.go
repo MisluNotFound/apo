@@ -1,21 +1,15 @@
 package alertanalyze
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/CloudDetail/apo/backend/pkg/code"
 	"github.com/CloudDetail/apo/backend/pkg/core"
+	"github.com/CloudDetail/apo/backend/pkg/model"
 
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 )
-
-// TODO 迁移到 model/request包中
-type getDefectsDetectRequest struct {
-}
-
-// TODO 迁移到 model/response包中
-type getDefectsDetectResponse struct {
-}
 
 // AddDefectsDetect 执行异常检测
 // @Summary 执行异常检测
@@ -41,12 +35,22 @@ func (h *handler) AddDefectsDetect() core.HandlerFunc {
 
 		err := h.alertanalyzeService.DetectDefects(req)
 		if err != nil {
-			c.AbortWithError(core.Error(
-				http.StatusBadRequest,
-				code.DetectDefectsError,
-				code.Text(code.DetectDefectsError)).WithError(err),
-			)
-			return
+			var vErr model.ErrWithMessage
+			if errors.As(err, &vErr) {
+				c.AbortWithError(core.Error(
+					http.StatusBadRequest,
+					vErr.Code,
+					code.Text(vErr.Code)).WithError(err),
+				)
+				return
+			} else {
+				c.AbortWithError(core.Error(
+					http.StatusBadRequest,
+					code.DetectDefectsError,
+					code.Text(code.DetectDefectsError)).WithError(err),
+				)
+				return
+			}
 		}
 		c.Payload("ok")
 	}

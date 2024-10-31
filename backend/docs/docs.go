@@ -439,6 +439,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/descendant/anormal/trend": {
+            "get": {
+                "description": "获取下游异常变化趋势",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取下游异常变化趋势",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetDescendantAnormalTrendRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetDescendantDeltaAnormalEventResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/detect/mutation/add": {
             "post": {
                 "description": "执行异常检测",
@@ -4686,6 +4726,27 @@ const docTemplate = `{
                 }
             }
         },
+        "model.AnormalType": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+            ],
+            "x-enum-varnames": [
+                "AnormalTypeUnknown",
+                "AnormalTypeAlertApp",
+                "AnormalTypeAlertContainer",
+                "AnormalTypeAlertInfra",
+                "AnormalTypeAlertNet",
+                "AnormalTypeError",
+                "AnormalTypeMutation"
+            ]
+        },
         "model.DetectExprPart": {
             "type": "object",
             "properties": {
@@ -4776,6 +4837,35 @@ const docTemplate = `{
                 "total": {
                     "description": "总记录数",
                     "type": "integer"
+                }
+            }
+        },
+        "model.PredefinedMetricExpr": {
+            "type": "object",
+            "properties": {
+                "compareGroup": {
+                    "description": "用于记录可以相互比较的检测表达式",
+                    "type": "string"
+                },
+                "customMetric": {
+                    "description": "常量表达式",
+                    "type": "string"
+                },
+                "describe": {
+                    "type": "string"
+                },
+                "group": {
+                    "description": "用于记录指标所属的告警事件组",
+                    "type": "string"
+                },
+                "metric": {
+                    "type": "string"
+                },
+                "modifier": {
+                    "$ref": "#/definitions/model.Modifier"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -5255,6 +5345,42 @@ const docTemplate = `{
                 },
                 "startTime": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.GetDescendantAnormalTrendRequest": {
+            "type": "object",
+            "required": [
+                "endTime",
+                "endpoint",
+                "service"
+            ],
+            "properties": {
+                "anormalTypes": {
+                    "description": "要查询的异常类型",
+                    "type": "string"
+                },
+                "endTime": {
+                    "description": "查询结束时间",
+                    "type": "integer"
+                },
+                "endpoint": {
+                    "description": "查询Endpoint",
+                    "type": "string"
+                },
+                "service": {
+                    "description": "查询服务名",
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "查询开始时间",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "step": {
+                    "description": "查询步长(us)",
+                    "type": "integer",
+                    "minimum": 1000000
                 }
             }
         },
@@ -5852,6 +5978,56 @@ const docTemplate = `{
                 }
             }
         },
+        "response.DescendantAnormalCounts": {
+            "type": "object",
+            "properties": {
+                "anormalCounts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.DescendantAnormalEventRecord": {
+            "type": "object",
+            "properties": {
+                "alertKey": {
+                    "type": "string"
+                },
+                "anormalMsg": {
+                    "type": "string"
+                },
+                "anormalObject": {
+                    "type": "string"
+                },
+                "anormalReason": {
+                    "type": "string"
+                },
+                "anormalStatus": {
+                    "description": "startFiring / updatedFiring / resolved",
+                    "type": "string"
+                },
+                "anormalType": {
+                    "$ref": "#/definitions/model.AnormalType"
+                },
+                "endpoint": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.DetailResponse": {
             "type": "object",
             "properties": {
@@ -6123,6 +6299,49 @@ const docTemplate = `{
                 }
             }
         },
+        "response.GetDescendantDeltaAnormalEventResponse": {
+            "type": "object",
+            "properties": {
+                "anormalCount": {
+                    "description": "AnormalEvents []model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `\nAnormalEvents map[int64][]model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.TempChartObject"
+                        }
+                    ]
+                },
+                "deltaAnormalEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
+                    }
+                },
+                "finalAnormalCounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalCounts"
+                    }
+                },
+                "finalAnormalEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
+                    }
+                },
+                "originAnormalCounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalCounts"
+                    }
+                },
+                "originAnormalEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalEventRecord"
+                    }
+                }
+            }
+        },
         "response.GetDescendantMetricsResponse": {
             "type": "object",
             "properties": {
@@ -6356,10 +6575,10 @@ const docTemplate = `{
         "response.GetPredefinedDetectExprResponse": {
             "type": "object",
             "properties": {
-                "predefinedMetrics": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/model.DetectExprPart"
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.PredefinedMetricExpr"
                     }
                 }
             }

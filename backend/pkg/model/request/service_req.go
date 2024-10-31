@@ -43,6 +43,16 @@ type GetDescendantAlertContributaionRequest struct {
 	SortBy string `form:"sortBy"`
 }
 
+type GetDescendantAnormalTrendRequest struct {
+	StartTime int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
+	EndTime   int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
+	Service   string `form:"service" binding:"required"`                   // 查询服务名
+	Endpoint  string `form:"endpoint" binding:"required"`                  // 查询Endpoint
+	Step      int64  `form:"step" binding:"min=1000000"`                   // 查询步长(us)
+
+	AnormalTypes string `form:"anormalTypes" json:"anormalTypes"` //要查询的异常类型
+}
+
 type GetDescendantAnormalDeltaEventRequest struct {
 	StartTime int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间
 	EndTime   int64  `form:"endTime" binding:"required,gtfield=StartTime"` // 查询结束时间
@@ -54,7 +64,6 @@ type GetDescendantAnormalDeltaEventRequest struct {
 	DeltaEndTime   int64 `form:"deltaEndTime" binding:"min=0"`   // 播放结束时间
 
 	AnormalTypes string `form:"anormalTypes" json:"anormalTypes"` //要查询的异常类型
-
 }
 
 type GetPolarisInferRequest struct {
@@ -189,6 +198,8 @@ type AlertFilter struct {
 	ID       string `form:"id"`
 	Severity string `form:"severity"`
 	Status   string `form:"status"`
+
+	WithMutation bool `form:"withMutation"`
 }
 
 type PageParam struct {

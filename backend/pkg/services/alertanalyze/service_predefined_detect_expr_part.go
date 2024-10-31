@@ -8,6 +8,7 @@ import (
 
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
+	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 )
 
 // 记录预定义的部分指标表达式
@@ -27,7 +28,7 @@ var (
 	}
 
 	gaugeGroup = map[string]map[string][]model.PredefinedMetric{
-		"mutation-container": {
+		kubernetes.MutationContainerLabelVal: {
 			"内存使用量": {
 				{
 					Name:   "容器 memory cache 量 (bytes)",
@@ -83,19 +84,19 @@ var (
 
 	// 瞬时指标
 	gaugeMetric = map[string][]model.PredefinedMetric{
-		"mutation-infra": {
+		kubernetes.MutationInfraLabelVal: {
 			{
 				Name:   "磁盘使用率 (%)",
 				Metric: "((node_filesystem_avail_bytes %OFFSET% * 100) / node_filesystem_size_bytes %OFFSET% and ON (instance_name, device, mountpoint) node_filesystem_readonly %OFFSET% == 0) * on(instance_name) group_left (nodename) node_uname_info {nodename=~\".+\"} %OFFSET%",
 			},
 		},
-		"mutation-network": {
+		kubernetes.MutationNetLabelVal: {
 			{
 				Name:   "网络RTT延时 (ms)",
 				Metric: "kindling_network_rtt{} %OFFSET% * 1000",
 			},
 		},
-		"mutation-container": {
+		kubernetes.MutationContainerLabelVal: {
 			{
 				Name:   "容器上次运行时间 (s)",
 				Metric: "container_last_seen %OFFSET% ",
@@ -129,7 +130,7 @@ var (
 
 	// 累计指标
 	counterMetric = map[string][]model.PredefinedMetric{
-		"mutation-infra": {
+		kubernetes.MutationInfraLabelVal: {
 			{
 				Name:   "磁盘IO利用率 (%)",
 				Metric: "(rate(node_disk_io_time_seconds_total[%RangeVector%] %OFFSET% )) * on(instance_name) group_left (nodename) node_uname_info{nodename=~\".+\"} %OFFSET%",
@@ -155,7 +156,7 @@ var (
 				Metric: "(avg by (instance_name) (rate(node_cpu_seconds_total{mode=\"iowait\"}[%RangeVector%] %OFFSET%)) * 100) * on(instance_name) group_left (nodename) node_uname_info{nodename=~\".+\"} %OFFSET%",
 			},
 		},
-		"mutation-container": {
+		kubernetes.MutationContainerLabelVal: {
 			{
 				Name:   "容器CPU使用率 (%)",
 				Metric: "(sum(rate(container_cpu_usage_seconds_total{container!=\"\"}[%RangeVector%] %OFFSET% )) by (pod, container) / sum(container_spec_cpu_quota{container!=\"\"} %OFFSET% /container_spec_cpu_period{container!=\"\"} %OFFSET% ) by (pod, container) * 100)",
@@ -234,80 +235,93 @@ func init() {
 		"过去1m的请求延时P90": {
 			PredefinedMetric: percentileLantency,
 			Modifier:         Last1MinP90,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        0,
 		},
 		"过去1h的请求延时P90": {
 			PredefinedMetric: percentileLantency,
 			Modifier:         Last1HourP90,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        1,
 		},
 		"过去1d的请求延时P90": {
 			PredefinedMetric: percentileLantency,
 			Modifier:         Last1DayP90,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        2,
 		},
 		"过去1m的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         Last1Min,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        3,
 		},
 		"过去1h的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         Last1Hour,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        4,
 		},
 		"过去1d的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         Last1Day,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        5,
 		},
 		"昨日同时刻过去1m的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         DayOnDayLast1Min,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        6,
 		},
 		"昨日同时刻过去1h的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         DayOnDayLast1Hour,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        7,
 		},
 		"上周同时刻过去1m的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         WeekOnWeekLast1Min,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        8,
 		},
 		"上周同时刻过去1h的平均请求延时": {
 			PredefinedMetric: avgLantency,
 			Modifier:         WeekOnWeekLast1Hour,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "latency",
+			MetricIdx:        9,
 		},
 		"过去1m的请求错误率": {
 			PredefinedMetric: errorRate,
 			Modifier:         Last1Min,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "errorRate",
+			MetricIdx:        10,
 		},
 		"过去1h的请求错误率": {
 			PredefinedMetric: errorRate,
 			Modifier:         Last1Hour,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "errorRate",
+			MetricIdx:        11,
 		},
 		"过去1d的请求错误率": {
 			PredefinedMetric: errorRate,
 			Modifier:         Last1Day,
-			Group:            "mutation-app",
+			Group:            kubernetes.MutationAppLabelVal,
 			CompareGroup:     "errorRate",
+			MetricIdx:        12,
 		},
 	}
 
@@ -320,6 +334,7 @@ func init() {
 					Modifier:         Last1Min,
 					Group:            group,
 					CompareGroup:     compareGroup,
+					MetricIdx:        len(PredefinedDetectExprParts),
 				}
 				// 昨日同时刻
 				PredefinedDetectExprParts["昨日同时刻"+metric.Name] = &model.DetectExprPart{
@@ -327,6 +342,7 @@ func init() {
 					Modifier:         DayOnDayLast1Min,
 					Group:            group,
 					CompareGroup:     compareGroup,
+					MetricIdx:        len(PredefinedDetectExprParts),
 				}
 			}
 		}
@@ -341,6 +357,7 @@ func init() {
 				Modifier:         Last1Min,
 				Group:            group,
 				CompareGroup:     strconv.Itoa(compareGroup),
+				MetricIdx:        len(PredefinedDetectExprParts),
 			}
 			// 昨日同时刻
 			PredefinedDetectExprParts["昨日同时刻"+metric.Name] = &model.DetectExprPart{
@@ -348,6 +365,7 @@ func init() {
 				Modifier:         DayOnDayLast1Min,
 				Group:            group,
 				CompareGroup:     strconv.Itoa(compareGroup),
+				MetricIdx:        len(PredefinedDetectExprParts),
 			}
 		}
 	}
@@ -361,6 +379,7 @@ func init() {
 				Modifier:         Last1Min,
 				Group:            group,
 				CompareGroup:     strconv.Itoa(compareGroup),
+				MetricIdx:        len(PredefinedDetectExprParts),
 			}
 			// 过去一小时均值
 			PredefinedDetectExprParts["过去1小时平均"+metric.Name] = &model.DetectExprPart{
@@ -368,6 +387,7 @@ func init() {
 				Modifier:         Last1Hour,
 				Group:            group,
 				CompareGroup:     strconv.Itoa(compareGroup),
+				MetricIdx:        len(PredefinedDetectExprParts),
 			}
 			// 昨日同时刻
 			PredefinedDetectExprParts["昨日同时刻过去一分钟"+metric.Name] = &model.DetectExprPart{
@@ -375,6 +395,7 @@ func init() {
 				Modifier:         DayOnDayLast1Min,
 				Group:            group,
 				CompareGroup:     strconv.Itoa(compareGroup),
+				MetricIdx:        len(PredefinedDetectExprParts),
 			}
 		}
 	}
@@ -391,16 +412,16 @@ func (s *service) DetectDefectsOptions() *response.GetPredefinedDetectExprRespon
 			expr.CustomMetric = expr.String()
 			expr.CustomMetric = strings.ReplaceAll(expr.CustomMetric, "%BucketRange%", s.promRepo.GetRange())
 			predefinedMetricsList = append(predefinedMetricsList, model.PredefinedMetricExpr{
-				DetectExprPart: model.DetectExprPart{},
+				DetectExprPart: *expr,
 				Describe:       key,
 			})
 		}
 
 		sort.SliceStable(predefinedMetricsList, func(i, j int) bool {
-			return predefinedMetricsList[i].CompareGroup > predefinedMetricsList[j].CompareGroup
+			return predefinedMetricsList[i].MetricIdx < predefinedMetricsList[j].MetricIdx
 		})
 	})
 	return &response.GetPredefinedDetectExprResponse{
-		PredefinedMetrics: PredefinedDetectExprParts,
+		PredefinedMetrics: predefinedMetricsList,
 	}
 }

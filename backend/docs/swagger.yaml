@@ -524,6 +524,24 @@ definitions:
         $ref: '#/definitions/model.AlertDetail'
       type: array
     type: object
+  model.AnormalType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    type: integer
+    x-enum-varnames:
+    - AnormalTypeUnknown
+    - AnormalTypeAlertApp
+    - AnormalTypeAlertContainer
+    - AnormalTypeAlertInfra
+    - AnormalTypeAlertNet
+    - AnormalTypeError
+    - AnormalTypeMutation
   model.DetectExprPart:
     properties:
       compareGroup:
@@ -587,6 +605,26 @@ definitions:
       total:
         description: 总记录数
         type: integer
+    type: object
+  model.PredefinedMetricExpr:
+    properties:
+      compareGroup:
+        description: 用于记录可以相互比较的检测表达式
+        type: string
+      customMetric:
+        description: 常量表达式
+        type: string
+      describe:
+        type: string
+      group:
+        description: 用于记录指标所属的告警事件组
+        type: string
+      metric:
+        type: string
+      modifier:
+        $ref: '#/definitions/model.Modifier'
+      name:
+        type: string
     type: object
   model.ServiceInstance:
     properties:
@@ -909,6 +947,33 @@ definitions:
     - endTime
     - service
     - startTime
+    type: object
+  request.GetDescendantAnormalTrendRequest:
+    properties:
+      anormalTypes:
+        description: 要查询的异常类型
+        type: string
+      endTime:
+        description: 查询结束时间
+        type: integer
+      endpoint:
+        description: 查询Endpoint
+        type: string
+      service:
+        description: 查询服务名
+        type: string
+      startTime:
+        description: 查询开始时间
+        minimum: 0
+        type: integer
+      step:
+        description: 查询步长(us)
+        minimum: 1000000
+        type: integer
+    required:
+    - endTime
+    - endpoint
+    - service
     type: object
   request.GetFaultLogContentRequest:
     properties:
@@ -1320,6 +1385,39 @@ definitions:
         description: 主键ID
         type: integer
     type: object
+  response.DescendantAnormalCounts:
+    properties:
+      anormalCounts:
+        additionalProperties:
+          type: integer
+        type: object
+      endpoint:
+        type: string
+      serviceName:
+        type: string
+    type: object
+  response.DescendantAnormalEventRecord:
+    properties:
+      alertKey:
+        type: string
+      anormalMsg:
+        type: string
+      anormalObject:
+        type: string
+      anormalReason:
+        type: string
+      anormalStatus:
+        description: startFiring / updatedFiring / resolved
+        type: string
+      anormalType:
+        $ref: '#/definitions/model.AnormalType'
+      endpoint:
+        type: string
+      serviceName:
+        type: string
+      timestamp:
+        type: integer
+    type: object
   response.DetailResponse:
     properties:
       id:
@@ -1502,6 +1600,35 @@ definitions:
       pagination:
         $ref: '#/definitions/model.Pagination'
     type: object
+  response.GetDescendantDeltaAnormalEventResponse:
+    properties:
+      anormalCount:
+        allOf:
+        - $ref: '#/definitions/response.TempChartObject'
+        description: |-
+          AnormalEvents []model.AnormalEvent `json:"anormalEvents"`
+          AnormalEvents map[int64][]model.AnormalEvent `json:"anormalEvents"`
+      deltaAnormalEvents:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalEventRecord'
+        type: array
+      finalAnormalCounts:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalCounts'
+        type: array
+      finalAnormalEvents:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalEventRecord'
+        type: array
+      originAnormalCounts:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalCounts'
+        type: array
+      originAnormalEvents:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalEventRecord'
+        type: array
+    type: object
   response.GetDescendantMetricsResponse:
     properties:
       endpoint:
@@ -1662,10 +1789,10 @@ definitions:
     type: object
   response.GetPredefinedDetectExprResponse:
     properties:
-      predefinedMetrics:
-        additionalProperties:
-          $ref: '#/definitions/model.DetectExprPart'
-        type: object
+      metrics:
+        items:
+          $ref: '#/definitions/model.PredefinedMetricExpr'
+        type: array
     type: object
   response.GetSQLMetricsResponse:
     properties:
@@ -2540,6 +2667,32 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 获取下游告警事件
+      tags:
+      - API.alerts
+  /api/alerts/descendant/anormal/trend:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取下游异常变化趋势
+      parameters:
+      - description: 请求信息
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetDescendantAnormalTrendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetDescendantDeltaAnormalEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取下游异常变化趋势
       tags:
       - API.alerts
   /api/alerts/detect/mutation/add:

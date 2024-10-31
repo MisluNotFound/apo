@@ -65,7 +65,7 @@ func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventReq
 
 	// 通过下游节点查询告警事件
 	events, count, err := s.chRepo.GetAlertEventsByInstanceAndEndpoints(startTime, endTime,
-		request.AlertFilter{Status: "firing"},
+		request.AlertFilter{Status: "firing", WithMutation: true},
 		instances, endpointList, req.PageParam,
 		clickhouse.OrderAlertByReceivedTime,
 	)

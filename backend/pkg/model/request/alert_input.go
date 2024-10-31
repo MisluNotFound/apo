@@ -118,7 +118,7 @@ type CheckAlertRuleRequest struct {
 
 type DetectMutationRequest struct {
 	DetectName     string                `form:"name" json:"name" binding:"required"`          // 告警名
-	MutataionCheck model.DetectExprPart  `form:"mutationCheckPOL" json:"mutationCheckPQL"`     // 需要执行故障检测的语句
+	MutataionCheck model.DetectExprPart  `form:"mutationCheckPQL" json:"mutationCheckPQL"`     // 需要执行故障检测的语句
 	UpperLimit     *model.DetectExprPart `form:"mutationUpperLimit" json:"mutationUpperLimit"` // 故障检测上限,使用数学表达式和内置变量(avg.1h,pct.99)
 	LowerLimit     *model.DetectExprPart `form:"mutationLowerLimit" json:"mutationLowerLimit"` // 故障检测下限
 

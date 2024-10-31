@@ -253,6 +253,9 @@ func extractFilter(filter request.AlertFilter, endpoints []model.EndpointKey, in
 	var whereInstance []*whereSQL
 	if len(filter.Group) == 0 || filter.Group == "app" {
 		whereGroup := EqualsIfNotEmpty("group", "app")
+		if filter.WithMutation {
+			whereGroup = MergeWheres(OrSep, whereGroup, Equals("group", "mutation-app"))
+		}
 		if len(endpoints) == 0 {
 			whereInstance = append(whereInstance, MergeWheres(
 				AndSep,
@@ -279,6 +282,9 @@ func extractFilter(filter request.AlertFilter, endpoints []model.EndpointKey, in
 
 	if len(filter.Group) == 0 || filter.Group == "container" {
 		whereGroup := EqualsIfNotEmpty("group", "container")
+		if filter.WithMutation {
+			whereGroup = MergeWheres(OrSep, whereGroup, Equals("group", "mutation-container"))
+		}
 		var k8sPods ValueInGroups = ValueInGroups{
 			Keys: []string{"tags['namespace']", "tags['pod']"},
 		}
@@ -302,6 +308,9 @@ func extractFilter(filter request.AlertFilter, endpoints []model.EndpointKey, in
 
 	if len(filter.Group) == 0 || filter.Group == "network" {
 		whereGroup := EqualsIfNotEmpty("group", "network")
+		if filter.WithMutation {
+			whereGroup = MergeWheres(OrSep, whereGroup, Equals("group", "mutation-network"))
+		}
 		var k8sPods ValueInGroups = ValueInGroups{
 			Keys: []string{"tags['src_namespace']", "tags['src_pod']"},
 		}
@@ -334,6 +343,9 @@ func extractFilter(filter request.AlertFilter, endpoints []model.EndpointKey, in
 
 	if len(filter.Group) == 0 || filter.Group == "infra" {
 		whereGroup := EqualsIfNotEmpty("group", "infra")
+		if filter.WithMutation {
+			whereGroup = MergeWheres(OrSep, whereGroup, Equals("group", "mutation-infra"))
+		}
 		var tmpSet = map[string]struct{}{}
 		var nodes clickhouse.ArraySet
 		for _, instance := range instances {

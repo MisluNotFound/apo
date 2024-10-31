@@ -95,4 +95,5 @@ var enText = map[string]string{
 	AlertAnalyzeDescendantAnormalEventError:   "Failed to analyze descendant anormal event",
 	AlertAnalyzeDescendantAnormalContribution: "Failed to analyze descendant anormal contribution",
 	DetectDefectsError:                        "Failed to detect defects",
+	DetectDefectsCreatAlertError:              "Failed to detect defects when create alert",
 }

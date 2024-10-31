@@ -28,7 +28,10 @@ type Service interface {
 	// 获取节点的所有下游节点的异常
 	GetDescendantAnormal(req *request.GetDescendantAnormalEventRequest) (*response.GetDescendantAnormalEventResponse, error)
 
-	// SearchAnormalDeltaByEntry 获取节点的所有下游节点的异常趋势
+	// 获取异常趋势
+	GetAnormalTrendByEntry(req *request.GetDescendantAnormalTrendRequest) (*response.GetDescendantDeltaAnormalEventResponse, error)
+
+	// SearchAnormalDeltaByEntry 获取节点的所有下游节点的异常变化
 	SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDeltaEventRequest) (*response.GetDescendantDeltaAnormalEventResponse, error)
 
 	// 获取预定义的检测表达式
@@ -46,10 +49,11 @@ type service struct {
 	k8sRepo kubernetes.Repo
 }
 
-func New(chRepo clickhouse.Repo, promRepo prometheus.Repo, polRepo polarisanalyzer.Repo) Service {
+func New(chRepo clickhouse.Repo, promRepo prometheus.Repo, polRepo polarisanalyzer.Repo, k8sRepo kubernetes.Repo) Service {
 	return &service{
 		chRepo:   chRepo,
 		promRepo: promRepo,
 		polRepo:  polRepo,
+		k8sRepo:  k8sRepo,
 	}
 }
