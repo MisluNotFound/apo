@@ -15,7 +15,7 @@ import (
 // @Summary 获取下游告警事件
 // @Description 获取下游告警事件
 // @Tags API.alerts
-// @Accept application/x-www-form-urlencoded
+// @Accept json
 // @Produce json
 // @Param startTime query int64 true "查询开始时间"
 // @Param endTime query int64 true "查询结束时间"

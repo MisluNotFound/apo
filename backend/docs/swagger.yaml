@@ -2574,7 +2574,7 @@ paths:
   /api/alerts/descendant/anormal/delta:
     post:
       consumes:
-      - application/x-www-form-urlencoded
+      - application/json
       description: 获取下游告警事件
       parameters:
       - description: 查询开始时间

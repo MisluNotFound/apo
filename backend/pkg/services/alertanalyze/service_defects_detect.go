@@ -302,10 +302,10 @@ func extractTagsFromLabels(name, alertGroup, group string, labels prometheus.Lab
 
 func extractDetailTemplate(name string, tags map[string]string, summary string) string {
 	tagsStr := fmt.Sprintf("%v", tags)
-	return `{"description":"` + name + `"\n  VALUE = %f\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
+	return `{"description":"` + name + ` 检测到异常\n  VALUE = %f\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
 }
 
 func extractResolvedDetail(name string, tags map[string]string, summary string) string {
 	tagsStr := fmt.Sprintf("%v", tags)
-	return `{"description":"` + name + `"\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
+	return `{"description":"` + name + ` 检测到异常\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
 }

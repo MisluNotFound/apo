@@ -299,7 +299,7 @@ const docTemplate = `{
             "post": {
                 "description": "获取下游告警事件",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"

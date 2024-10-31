@@ -19,6 +19,14 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 	startTime := time.UnixMicro(req.StartTime)
 	endTime := time.UnixMicro(req.EndTime)
 
+	if req.PageParam == nil {
+		// 按0,999分页
+		req.PageParam = &request.PageParam{
+			CurrentPage: 1,
+			PageSize:    999,
+		}
+	}
+
 	// 从Clickhouse中获取到所有的告警
 	if req.EventID != "" {
 		entrys, err := s.alertImpactTargetEvent(req.EventID, startTime, endTime)
@@ -31,6 +39,14 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 	}, nil, nil, clickhouse.OrderAlertByReceivedTime)
 	if err != nil {
 		return nil, nil, nil, nil, err
+	}
+
+	if count == 0 {
+		return []clickhouse.EntryNodeRelations{}, []response.ImpactAlertEvent{}, map[model.EndpointKey]int{}, &model.Pagination{
+			Total:       0,
+			CurrentPage: req.CurrentPage,
+			PageSize:    req.PageSize,
+		}, nil
 	}
 
 	endpointsMap := EndpointsMap{
@@ -75,14 +91,6 @@ func (s *service) AlertImpact(req *request.AlertImpactRequest) ([]clickhouse.Ent
 }
 
 func addRelatedEntryAndPagation(req *request.AlertImpactRequest, count int, impactEvents []response.ImpactAlertEvent, entryRelation []clickhouse.EntryNodeRelations) (*model.Pagination, []response.ImpactAlertEvent, map[model.EndpointKey]int, error) {
-	if req.PageParam == nil {
-		// 按0,999分页
-		req.PageParam = &request.PageParam{
-			CurrentPage: 1,
-			PageSize:    999,
-		}
-	}
-
 	var pagation *model.Pagination = &model.Pagination{
 		Total:       int64(count),
 		CurrentPage: req.CurrentPage,
