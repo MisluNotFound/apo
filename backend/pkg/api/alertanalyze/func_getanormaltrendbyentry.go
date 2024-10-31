@@ -24,7 +24,7 @@ import (
 func (h *handler) GetAnormalTrendByEntry() core.HandlerFunc {
 	return func(c core.Context) {
 		req := new(request.GetDescendantAnormalTrendRequest)
-		if err := c.ShouldBindJSON(req); err != nil {
+		if err := c.ShouldBindQuery(req); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,
