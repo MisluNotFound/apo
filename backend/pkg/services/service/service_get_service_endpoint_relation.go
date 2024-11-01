@@ -139,17 +139,20 @@ func (m *EndpointDepthMatrix) dfs(node int, target int, visited []bool, currentD
 	}
 
 	visited[node] = true
+	var partMaxDistance = -1
 	for i, edge := range m.Matrix[node] {
 		if edge > 0 && !visited[i] { // 存在边且未访问
 			newMaxDistance, found := m.dfs(i, target, visited, currentDistance+1, maxDistance)
-			maxDistance = newMaxDistance
-			if found {
-				return maxDistance, true
+			if found && newMaxDistance > partMaxDistance {
+				partMaxDistance = newMaxDistance
 			}
 		}
 	}
 	visited[node] = false // 回溯
 
+	if partMaxDistance > 0 {
+		return partMaxDistance, true
+	}
 	return maxDistance, false
 }
 

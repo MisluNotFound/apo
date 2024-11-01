@@ -20,6 +20,11 @@ const (
 	NETWORK_GROUP   AlertGroup = "network"
 	CONTAINER_GROUP AlertGroup = "container"
 	INFRA_GROUP     AlertGroup = "infra"
+
+	MUTATION_APP_GROUP       AlertGroup = "mutation-app"
+	MUTATION_NETWORK_GROUP   AlertGroup = "mutation-network"
+	MUTATION_CONTAINER_GROUP AlertGroup = "mutation-container"
+	MUTATION_INFRA_GROUP     AlertGroup = "mutation-infra"
 )
 
 func (g AlertGroup) GetAlertType() string {

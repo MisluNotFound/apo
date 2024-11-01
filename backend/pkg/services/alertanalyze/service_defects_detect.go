@@ -19,7 +19,7 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 	step := time.Duration(req.Step * int64(time.Microsecond))
 
 	if len(req.MutataionCheck.Group) == 0 {
-		req.MutataionCheck.Group = "mutation-custom"
+		req.MutataionCheck.Group = kubernetes.MutationCustomLabelVal
 	}
 
 	// 准备告警事件所需的Detail模版

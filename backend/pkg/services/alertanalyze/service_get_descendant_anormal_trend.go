@@ -63,7 +63,7 @@ func (s *service) GetAnormalTrendByEntry(req *request.GetDescendantAnormalTrendR
 	var anormalEventList []model.AnormalEvent
 
 	// 获取匹配的error
-	if len(selectedEvents) == 0 || contains(selectedEvents, errorEvent) {
+	if len(selectedEvents) == 0 || isSelect(selectedEvents, errorEvent) {
 		propagations, err := s.chRepo.ListErrorByEntryService(req.StartTime, req.EndTime, req.Service, req.Endpoint, endpoints)
 		if err == nil {
 			errorEvents := s.parseErrorEvent(propagations, instanceMap, req.Step)
@@ -74,7 +74,7 @@ func (s *service) GetAnormalTrendByEntry(req *request.GetDescendantAnormalTrendR
 		}
 	}
 
-	if len(selectedEvents) == 0 || hasPrefix(selectedEvents, alertEventPrefix) {
+	if len(selectedEvents) == 0 || isSelect(selectedEvents, alertEvent) {
 		// 获取匹配的alertEvents
 		alertEvents, err := s.chRepo.GetAlertEventsWithKeyByInstanceAndEndpoints(
 			startTime, endTime,

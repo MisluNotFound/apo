@@ -24,7 +24,7 @@ import (
 func (h *handler) AddDefectsDetect() core.HandlerFunc {
 	return func(c core.Context) {
 		req := new(request.DetectMutationRequest)
-		if err := c.ShouldBindJSON(req); err != nil {
+		if err := c.ShouldBindJSON(req); err != nil || len(req.MutataionCheck.CustomMetric) == 0 {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,

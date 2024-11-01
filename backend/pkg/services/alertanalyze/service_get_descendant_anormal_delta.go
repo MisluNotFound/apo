@@ -9,13 +9,17 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
+	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	ck "github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
 const (
+	alertEvent = "alert"
+	errorEvent = "error"
+
+	mutationEventPrefix = "mutation-"
+	// TODO
 	alertEventPrefix = "alert-"
-	errorEvent       = "error"
-	mutationEvent    = "mutation"
 )
 
 // SearchAnormalDeltaByEntry 基于入口查询异常事件
@@ -72,7 +76,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	var anormalEventList []model.AnormalEvent
 
 	// 获取匹配的error
-	if len(selectedEvents) == 0 || contains(selectedEvents, errorEvent) {
+	if len(selectedEvents) == 0 || isSelect(selectedEvents, errorEvent) {
 		propagations, err := s.chRepo.ListErrorByEntryService(req.StartTime, req.EndTime, req.Service, req.Endpoint, endpoints)
 		if err == nil {
 			errorEvents := s.parseErrorEvent(propagations, instanceMap, req.Step)
@@ -83,7 +87,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		}
 	}
 
-	if len(selectedEvents) == 0 || hasPrefix(selectedEvents, alertEventPrefix) {
+	if len(selectedEvents) == 0 || isSelect(selectedEvents, alertEvent) {
 		// 获取匹配的alertEvents
 		alertEvents, err := s.chRepo.GetAlertEventsWithKeyByInstanceAndEndpoints(
 			startTime, endTime,
@@ -188,9 +192,6 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			for _, impactEndpoint := range event.ImpactEndpoints {
 				var hasStarted bool
 				for _, ts := range deltaEventTS {
-					if event.AnormalType == model.AnormalTypeError && ts.AnormalStatus == model.StatusResolved {
-						continue // 不记录Error事件的Resolved
-					}
 					var anormalStatus string
 					if isFiringBefore == model.StatusFiring && ts.AnormalStatus == model.StatusFiring ||
 						hasStarted && isFiringBefore == model.StatusFiring && ts.AnormalStatus == model.StatusFiring {
@@ -301,7 +302,8 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 
 	for i := 0; i < len(alertEvents); i++ {
 		alertEvent := alertEvents[i]
-		if len(selectedEvents) > 0 && !contains(selectedEvents, alertEventPrefix+alertEvent.Group) {
+		if len(selectedEvents) > 0 &&
+			isSelect(selectedEvents, alertEvent.Group) {
 			// 跳过未选择的事件
 			continue
 		}
@@ -334,7 +336,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 
 		// 完善告警信息
 		switch ck.AlertGroup(alertEvent.Group) {
-		case ck.APP_GROUP:
+		case ck.APP_GROUP, ck.MUTATION_APP_GROUP:
 			anormalEvent.AnormalType = model.AnormalTypeAlertApp
 			anormalEvent.ImpactEndpoints = append(anormalEvent.ImpactEndpoints, model.AnormalEventDetail{
 				EndpointKey: model.EndpointKey{
@@ -346,7 +348,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 				AlertReason:  alertEvent.Name,
 				AlertMessage: alertMessage,
 			})
-		case ck.CONTAINER_GROUP:
+		case ck.CONTAINER_GROUP, ck.MUTATION_CONTAINER_GROUP:
 			anormalEvent.AnormalType = model.AnormalTypeAlertContainer
 			instance, endpoints := instanceMap.GetEndpointsByK8sPodNS(alertEvent.GetK8sPodTag(), alertEvent.GetK8sNamespaceTag())
 			if instance == nil {
@@ -361,7 +363,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 					AlertMessage: alertMessage,
 				})
 			}
-		case ck.NETWORK_GROUP:
+		case ck.NETWORK_GROUP, ck.MUTATION_NETWORK_GROUP:
 			anormalEvent.AnormalType = model.AnormalTypeAlertNet
 			var endpoints []model.EndpointKey
 			var instance *model.ServiceInstance
@@ -386,7 +388,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 					AlertMessage: alertMessage,
 				})
 			}
-		case ck.INFRA_GROUP:
+		case ck.INFRA_GROUP, ck.MUTATION_INFRA_GROUP:
 			anormalEvent.AnormalType = model.AnormalTypeAlertInfra
 			endpointsMaps := instanceMap.GetEndpointsByNode(alertEvent.GetInfraNodeTag())
 			for instance, endpoints := range endpointsMaps {
@@ -565,18 +567,31 @@ func (m *instanceMap) IsEndpointKeyExist(endpointKey model.EndpointKey) bool {
 	return find
 }
 
-func contains(arr []string, str string) bool {
-	for _, v := range arr {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
+func isSelect(selectedEvents []string, eventGroup string) bool {
+	if eventGroup == alertEvent {
+		for _, eventType := range selectedEvents {
+			if eventType == string(clickhouse.APP_GROUP) ||
+				eventType == string(clickhouse.CONTAINER_GROUP) ||
+				eventType == string(clickhouse.INFRA_GROUP) ||
+				eventType == string(clickhouse.NETWORK_GROUP) {
+				return true
+			}
 
-func hasPrefix(arr []string, str string) bool {
-	for _, v := range arr {
-		if strings.HasPrefix(v, str) {
+			// TODO 兼容, 后续删除
+			if eventType == "alert-"+string(clickhouse.APP_GROUP) ||
+				eventType == "alert-"+string(clickhouse.CONTAINER_GROUP) ||
+				eventType == "alert-"+string(clickhouse.INFRA_GROUP) ||
+				eventType == "alert-"+string(clickhouse.NETWORK_GROUP) {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, eventType := range selectedEvents {
+		if eventType == eventGroup ||
+			mutationEventPrefix+eventType == eventGroup ||
+			eventType == alertEventPrefix+eventGroup {
 			return true
 		}
 	}
