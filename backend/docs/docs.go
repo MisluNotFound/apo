@@ -277,6 +277,12 @@ const docTemplate = `{
                         "description": "入口Endpoint",
                         "name": "entryEndpoint",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段,支持latency和errorRate,多个使用,链接",
+                        "name": "sortBy",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2204,6 +2210,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "入口Endpoint",
                         "name": "entryEndpoint",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段,支持latency和errorRate",
+                        "name": "sortBy",
                         "in": "query"
                     }
                 ],
@@ -6276,6 +6288,15 @@ const docTemplate = `{
         "response.GetDescendantAlertContributationResponse": {
             "type": "object",
             "properties": {
+                "contributationMap": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/model.EndpointKey"
+                        }
+                    }
+                },
                 "latencyContributationList": {
                     "description": "延时曲线相似度前三的节点",
                     "type": "array",
@@ -6302,6 +6323,12 @@ const docTemplate = `{
         "response.GetDescendantDeltaAnormalEventResponse": {
             "type": "object",
             "properties": {
+                "alertTriggeredCounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.DescendantAnormalCounts"
+                    }
+                },
                 "anormalCount": {
                     "description": "AnormalEvents []model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `\nAnormalEvents map[int64][]model.AnormalEvent ` + "`" + `json:\"anormalEvents\"` + "`" + `",
                     "allOf": [

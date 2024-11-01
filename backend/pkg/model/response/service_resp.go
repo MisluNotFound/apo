@@ -273,6 +273,7 @@ type ImpactAlertEvent struct {
 }
 
 type GetDescendantAlertContributationResponse struct {
+	ContributationMap map[string][]model.EndpointKey `json:"contributationMap"`
 	// 延时曲线相似度前三的节点
 	LatencyContributationList []model.EndpointKey `json:"latencyContributationList"`
 }

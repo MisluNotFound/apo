@@ -1585,6 +1585,12 @@ definitions:
     type: object
   response.GetDescendantAlertContributationResponse:
     properties:
+      contributationMap:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/model.EndpointKey'
+          type: array
+        type: object
       latencyContributationList:
         description: 延时曲线相似度前三的节点
         items:
@@ -1602,6 +1608,10 @@ definitions:
     type: object
   response.GetDescendantDeltaAnormalEventResponse:
     properties:
+      alertTriggeredCounts:
+        items:
+          $ref: '#/definitions/response.DescendantAnormalCounts'
+        type: array
       anormalCount:
         allOf:
         - $ref: '#/definitions/response.TempChartObject'
@@ -2556,6 +2566,10 @@ paths:
       - description: 入口Endpoint
         in: query
         name: entryEndpoint
+        type: string
+      - description: 排序字段,支持latency和errorRate,多个使用,链接
+        in: query
+        name: sortBy
         type: string
       produces:
       - application/json
@@ -3827,6 +3841,10 @@ paths:
       - description: 入口Endpoint
         in: query
         name: entryEndpoint
+        type: string
+      - description: 排序字段,支持latency和errorRate
+        in: query
+        name: sortBy
         type: string
       produces:
       - application/json

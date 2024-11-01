@@ -10,11 +10,11 @@ var polarisAnalyzerAddress = "http://localhost:5000"
 
 type Repo interface {
 	// SortDescendantByLatencyRelevance 查询依赖节点延时关联度
-	SortDescendantByLatencyRelevance(
+	SortDescendantByRelevance(
 		startTime, endTime int64, stepStr string,
 		targetService, targetEndpoint string,
-		unsortedDescendant []LatencyRelevance,
-	) (sortResp *LatencyRelevanceResponse, err error)
+		unsortedDescendant []Relevance, sortBy string,
+	) (sortResp *RelevanceResponse, err error)
 
 	QueryPolarisInfer(
 		startTime, endTime int64, stepStr string,

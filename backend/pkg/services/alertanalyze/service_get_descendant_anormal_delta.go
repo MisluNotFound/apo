@@ -9,7 +9,6 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
-	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 	ck "github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
 )
 
@@ -18,7 +17,8 @@ const (
 	errorEvent = "error"
 
 	mutationEventPrefix = "mutation-"
-	// TODO
+
+	// TODO 兼容, 后续删除
 	alertEventPrefix = "alert-"
 )
 
@@ -330,7 +330,7 @@ func (*service) parseAlertEvents(alertEvents []ck.AlertEventWithKey, instanceMap
 	for i := 0; i < len(alertEvents); i++ {
 		alertEvent := alertEvents[i]
 		if len(selectedEvents) > 0 &&
-			isSelect(selectedEvents, alertEvent.Group) {
+			!isSelect(selectedEvents, alertEvent.Group) {
 			// 跳过未选择的事件
 			continue
 		}
@@ -597,18 +597,18 @@ func (m *instanceMap) IsEndpointKeyExist(endpointKey model.EndpointKey) bool {
 func isSelect(selectedEvents []string, eventGroup string) bool {
 	if eventGroup == alertEvent {
 		for _, eventType := range selectedEvents {
-			if eventType == string(clickhouse.APP_GROUP) ||
-				eventType == string(clickhouse.CONTAINER_GROUP) ||
-				eventType == string(clickhouse.INFRA_GROUP) ||
-				eventType == string(clickhouse.NETWORK_GROUP) {
+			if eventType == string(ck.APP_GROUP) ||
+				eventType == string(ck.CONTAINER_GROUP) ||
+				eventType == string(ck.INFRA_GROUP) ||
+				eventType == string(ck.NETWORK_GROUP) {
 				return true
 			}
 
-			// TODO 兼容, 后续删除
-			if eventType == "alert-"+string(clickhouse.APP_GROUP) ||
-				eventType == "alert-"+string(clickhouse.CONTAINER_GROUP) ||
-				eventType == "alert-"+string(clickhouse.INFRA_GROUP) ||
-				eventType == "alert-"+string(clickhouse.NETWORK_GROUP) {
+			// TODO 兼容前端使用alert-app场景, 后续删除
+			if eventType == "alert-"+string(ck.APP_GROUP) ||
+				eventType == "alert-"+string(ck.CONTAINER_GROUP) ||
+				eventType == "alert-"+string(ck.INFRA_GROUP) ||
+				eventType == "alert-"+string(ck.NETWORK_GROUP) {
 				return true
 			}
 		}
@@ -616,8 +616,9 @@ func isSelect(selectedEvents []string, eventGroup string) bool {
 	}
 
 	for _, eventType := range selectedEvents {
+		mutationType := mutationEventPrefix + eventType
 		if eventType == eventGroup ||
-			mutationEventPrefix+eventType == eventGroup ||
+			mutationType == eventGroup ||
 			eventType == alertEventPrefix+eventGroup {
 			return true
 		}

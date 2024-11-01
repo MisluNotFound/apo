@@ -11,12 +11,13 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/repository/polarisanalyzer"
 	prom "github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 	"github.com/CloudDetail/apo/backend/pkg/services/serviceoverview"
+	"go.uber.org/multierr"
 )
 
 // GetDescendantRelevance implements Service.
 func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequest) ([]response.GetDescendantRelevanceResponse, error) {
 	// 查询所有子孙节点
-	nodes, err := s.chRepo.ListDescendantNodes(req)
+	nodes, err := s.chRepo.ListDescendantNodes(&req.GetDescendantMetricsRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -25,10 +26,10 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 		return make([]response.GetDescendantRelevanceResponse, 0), nil
 	}
 
-	unsortedDescendant := make([]polarisanalyzer.LatencyRelevance, 0, len(nodes))
+	unsortedDescendant := make([]polarisanalyzer.Relevance, 0, len(nodes))
 	var services, endpoints []string
 	for _, node := range nodes {
-		unsortedDescendant = append(unsortedDescendant, polarisanalyzer.LatencyRelevance{
+		unsortedDescendant = append(unsortedDescendant, polarisanalyzer.Relevance{
 			Service:  node.Service,
 			Endpoint: node.Endpoint,
 		})
@@ -37,12 +38,12 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 	}
 
 	// 按延时相似度排序
-	sortResp, err := s.polRepo.SortDescendantByLatencyRelevance(
+	sortResp, err := s.polRepo.SortDescendantByRelevance(
 		req.StartTime, req.EndTime, prom.VecFromDuration(time.Duration(req.Step)*time.Microsecond),
 		req.Service, req.Endpoint,
-		unsortedDescendant,
+		unsortedDescendant, req.SortBy,
 	)
-	var sortResult []polarisanalyzer.LatencyRelevance
+	var sortResult []polarisanalyzer.Relevance
 	var sortType string
 	if err != nil || sortResp == nil {
 		sortResult = unsortedDescendant
@@ -52,7 +53,7 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 		sortType = sortResp.DistanceType
 		// 将未能排序成功的下游添加到descendants后(可能是没有北极星指标)
 		for _, descendant := range sortResp.UnsortedDescendant {
-			sortResult = append(sortResult, polarisanalyzer.LatencyRelevance{
+			sortResult = append(sortResult, polarisanalyzer.Relevance{
 				Service:  descendant.Service,
 				Endpoint: descendant.Endpoint,
 			})
@@ -60,14 +61,36 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 	}
 
 	var resp []response.GetDescendantRelevanceResponse
+	if req.WithAlert {
+		resp = s.fillDescendantWithAlertStatus(services, endpoints, req, sortResult, sortType, resp)
+	} else {
+		for i := 0; i < len(sortResult); i++ {
+			descendant := sortResult[i]
+			resp = append(resp, response.GetDescendantRelevanceResponse{
+				ServiceName:  descendant.Service,
+				EndPoint:     descendant.Endpoint,
+				Distance:     descendant.Relevance,
+				DistanceType: sortType,
+			})
+		}
+	}
+
+	return resp, nil
+}
+
+func (s *service) fillDescendantWithAlertStatus(services []string, endpoints []string, req *request.GetDescendantRelevanceRequest, sortResult []polarisanalyzer.Relevance, sortType string, resp []response.GetDescendantRelevanceResponse) []response.GetDescendantRelevanceResponse {
+	var alermCheckErr error
+
+	// 查询RED指标和阈值
 	descendantStatus, err := s.queryDescendantStatus(services, endpoints, req.StartTime, req.EndTime)
 	if err != nil {
-		// TODO 添加日志,查询RED指标失败
+		alermCheckErr = multierr.Append(alermCheckErr, err)
 	}
 	threshold, err := s.dbRepo.GetOrCreateThreshold("", "", database.GLOBAL)
 	if err != nil {
-		// TODO 添加日志,查询阈值失败
+		alermCheckErr = multierr.Append(alermCheckErr, err)
 	}
+
 	for _, descendant := range sortResult {
 		var descendantResp = response.GetDescendantRelevanceResponse{
 			ServiceName:      descendant.Service,
@@ -87,7 +110,7 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 		// 获取每个endpoint下的所有实例
 		instances, err := s.promRepo.GetInstanceList(req.StartTime, req.EndTime, descendant.Service, descendant.Endpoint)
 		if err != nil {
-			// TODO deal error
+			alermCheckErr = multierr.Append(alermCheckErr, err)
 			continue
 		}
 
@@ -118,8 +141,7 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 		}
 		resp = append(resp, descendantResp)
 	}
-
-	return resp, nil
+	return resp
 }
 
 func (s *service) queryDescendantStatus(services []string, endpoints []string, startTime, endTime int64) (*DescendantStatusMap, error) {

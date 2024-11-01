@@ -74,7 +74,12 @@ type GetPolarisInferRequest struct {
 	Endpoint  string `form:"endpoint" binding:"required"`                  // 查询Endpoint
 }
 
-type GetDescendantRelevanceRequest = GetDescendantMetricsRequest
+type GetDescendantRelevanceRequest struct {
+	GetDescendantMetricsRequest
+
+	SortBy    string `form:"sortBy"` // latency, errorRate
+	WithAlert bool   `form:"withAlert"`
+}
 
 type GetErrorInstanceRequest = GetDescendantMetricsRequest
 

@@ -21,6 +21,7 @@ import (
 // @Param step query int64 true "查询步长(us)"
 // @Param entryService query string false "入口服务名"
 // @Param entryEndpoint query string false "入口Endpoint"
+// @Param sortBy query string false "排序字段,支持latency和errorRate,多个使用,链接"
 // @Success 200 {object} response.GetDescendantAlertContributationResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/alerts/descendant/anormal/contribution [get]

@@ -1,6 +1,7 @@
 package alertanalyze
 
 import (
+	"strings"
 	"time"
 
 	"github.com/CloudDetail/apo/backend/pkg/model"
@@ -24,33 +25,50 @@ func (s *service) GetDescendantContribution(req *request.GetDescendantAlertContr
 		}, nil
 	}
 
-	unsortedDescendant := make([]polarisanalyzer.LatencyRelevance, 0, len(nodes))
+	unsortedDescendant := make([]polarisanalyzer.Relevance, 0, len(nodes))
 	for _, node := range nodes {
-		unsortedDescendant = append(unsortedDescendant, polarisanalyzer.LatencyRelevance{
+		unsortedDescendant = append(unsortedDescendant, polarisanalyzer.Relevance{
 			Service:  node.Service,
 			Endpoint: node.Endpoint,
 		})
 	}
 
-	// 按延时相似度排序
-	sortResp, err := s.polRepo.SortDescendantByLatencyRelevance(
-		req.StartTime, req.EndTime, prometheus.VecFromDuration(time.Duration(req.Step)*time.Microsecond),
-		req.Service, req.Endpoint,
-		unsortedDescendant,
-	)
-
-	if err != nil {
-		return &response.GetDescendantAlertContributationResponse{}, err
+	if len(req.SortBy) == 0 {
+		req.SortBy = "latency,errorRate"
 	}
 
-	var latencyContributationList = []model.EndpointKey{}
-	for i := 0; i < len(sortResp.SortedDescendant) && i < 3; i++ {
-		latencyContributationList = append(latencyContributationList, model.EndpointKey{
-			ServiceName: sortResp.SortedDescendant[i].Service,
-			Endpoint:    sortResp.SortedDescendant[i].Endpoint,
-		})
+	sortBys := strings.Split(req.SortBy, ",")
+	var latencyContributationList []model.EndpointKey
+	var contributationMap map[string][]model.EndpointKey = make(map[string][]model.EndpointKey)
+	for _, sortBy := range sortBys {
+		// 按延时相似度排序
+		sortResp, err := s.polRepo.SortDescendantByRelevance(
+			req.StartTime, req.EndTime, prometheus.VecFromDuration(time.Duration(req.Step)*time.Microsecond),
+			req.Service, req.Endpoint,
+			unsortedDescendant, sortBy,
+		)
+
+		if err != nil {
+			return &response.GetDescendantAlertContributationResponse{}, err
+		}
+
+		var contributationList []model.EndpointKey
+		for i := 0; i < len(sortResp.SortedDescendant) && i < 3; i++ {
+			contributationList = append(contributationList, model.EndpointKey{
+				ServiceName: sortResp.SortedDescendant[i].Service,
+				Endpoint:    sortResp.SortedDescendant[i].Endpoint,
+			})
+		}
+		contributationMap[sortBy] = contributationList
+
+		// TODO 兼容
+		if sortBy == "latency" {
+			latencyContributationList = contributationList
+		}
 	}
+
 	return &response.GetDescendantAlertContributationResponse{
 		LatencyContributationList: latencyContributationList,
+		ContributationMap:         contributationMap,
 	}, nil
 }

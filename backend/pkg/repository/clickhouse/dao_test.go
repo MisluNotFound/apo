@@ -126,7 +126,6 @@ func testDescendantRelations(t *testing.T, repo Repo) {
 			Service:   "ts-seat-service",
 			Endpoint:  "POST /api/v1/seatservice/seats/left_tickets",
 		},
-		WithTopologyLevel: false,
 	}
 	resp, err := repo.ListDescendantRelations(&req.GetServiceEndpointTopologyRequest)
 	if err != nil {
