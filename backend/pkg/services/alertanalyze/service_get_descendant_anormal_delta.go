@@ -106,6 +106,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	}
 
 	originAnormalCounts := map[model.EndpointKey]map[model.AnormalType]int64{}
+	alertTriggeredCounts := map[model.EndpointKey]map[model.AnormalType]int64{}
 	finalAnormalCounts := map[model.EndpointKey]map[model.AnormalType]int64{}
 
 	originAnormalEvents := []response.DescendantAnormalEventRecord{}
@@ -118,6 +119,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		isFiringBefore := model.StatusResolved
 		lastEventTSBefore := int64(-1)
 		lastEventTSAfter := int64(-1)
+		isFiringDurning := model.StatusResolved
 		isFiringAfter := model.StatusResolved
 		deltaEventTS := []model.AnormalUpdateTS{}
 
@@ -127,6 +129,11 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			if updateTS.Timestamp < req.DeltaStartTime {
 				isFiringBefore = updateTS.AnormalStatus
 				lastEventTSBefore = updateTS.Timestamp
+			}
+			if updateTS.Timestamp >= req.DeltaStartTime &&
+				updateTS.Timestamp <= req.DeltaEndTime &&
+				updateTS.AnormalStatus == model.StatusFiring {
+				isFiringDurning = model.StatusFiring
 			}
 			if updateTS.Timestamp < req.DeltaEndTime {
 				isFiringAfter = updateTS.AnormalStatus
@@ -159,6 +166,17 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 					AnormalMsg:    impactEndpoint.AlertMessage[lastEventTSBefore],
 					AnormalStatus: "updatedFiring",
 				})
+			}
+		}
+
+		if isFiringBefore == model.StatusFiring || isFiringDurning == model.StatusFiring {
+			for _, impactEndpoints := range event.ImpactEndpoints {
+				alertCounts, find := alertTriggeredCounts[impactEndpoints.EndpointKey]
+				if !find {
+					alertCounts = map[model.AnormalType]int64{}
+					alertTriggeredCounts[impactEndpoints.EndpointKey] = alertCounts
+				}
+				alertCounts[event.AnormalType]++
 			}
 		}
 
@@ -227,6 +245,14 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		})
 	}
 
+	var alertTriggeredCountsList = []response.DescendantAnormalCounts{}
+	for endpoint, anormalCounts := range alertTriggeredCounts {
+		alertTriggeredCountsList = append(alertTriggeredCountsList, response.DescendantAnormalCounts{
+			EndpointKey:      endpoint,
+			AnormalCountsMap: anormalCounts,
+		})
+	}
+
 	var finalAnormalCountsList = []response.DescendantAnormalCounts{}
 	for endpoint, anormalCounts := range finalAnormalCounts {
 		finalAnormalCountsList = append(finalAnormalCountsList, response.DescendantAnormalCounts{
@@ -236,8 +262,9 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	}
 
 	return &response.GetDescendantDeltaAnormalEventResponse{
-		OriginAnormalCounts: originAnormalCountsList,
-		FinalAnormalCounts:  finalAnormalCountsList,
+		OriginAnormalCounts:  originAnormalCountsList,
+		AlertTriggeredCounts: alertTriggeredCountsList,
+		FinalAnormalCounts:   finalAnormalCountsList,
 
 		OriginAnormalEvents: originAnormalEvents,
 		DeltaAnormalEvents:  deltaAnormalEvents,

@@ -17,8 +17,9 @@ type GetDescendantDeltaAnormalEventResponse struct {
 	// AnormalEvents map[int64][]model.AnormalEvent `json:"anormalEvents"`
 	AnormalCount TempChartObject `json:"anormalCount"`
 
-	OriginAnormalCounts []DescendantAnormalCounts `json:"originAnormalCounts"`
-	FinalAnormalCounts  []DescendantAnormalCounts `json:"finalAnormalCounts"`
+	OriginAnormalCounts  []DescendantAnormalCounts `json:"originAnormalCounts"`
+	AlertTriggeredCounts []DescendantAnormalCounts `json:"alertTriggeredCounts"`
+	FinalAnormalCounts   []DescendantAnormalCounts `json:"finalAnormalCounts"`
 
 	OriginAnormalEvents []DescendantAnormalEventRecord `json:"originAnormalEvents"`
 	DeltaAnormalEvents  []DescendantAnormalEventRecord `json:"deltaAnormalEvents"`
