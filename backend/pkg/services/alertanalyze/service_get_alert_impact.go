@@ -450,7 +450,7 @@ func tryGetAlertServiceByInfraNode(repo prometheus.Repo, endpointsMap *Endpoints
 
 	if len(endpoints) == 0 {
 		return nil, model.ErrAlertImpactNoMatchedService{
-			TagGroup:  []string{"node"},
+			TagGroup:  []string{"instance_name"},
 			TagValues: []string{nodeName},
 		}
 	}

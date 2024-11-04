@@ -17,9 +17,6 @@ const (
 	errorEvent = "error"
 
 	mutationEventPrefix = "mutation-"
-
-	// TODO 兼容, 后续删除
-	alertEventPrefix = "alert-"
 )
 
 // SearchAnormalDeltaByEntry 基于入口查询异常事件
@@ -595,6 +592,7 @@ func (m *instanceMap) IsEndpointKeyExist(endpointKey model.EndpointKey) bool {
 }
 
 func isSelect(selectedEvents []string, eventGroup string) bool {
+	// 是否叠加alert告警
 	if eventGroup == alertEvent {
 		for _, eventType := range selectedEvents {
 			if eventType == string(ck.APP_GROUP) ||
@@ -603,23 +601,20 @@ func isSelect(selectedEvents []string, eventGroup string) bool {
 				eventType == string(ck.NETWORK_GROUP) {
 				return true
 			}
-
-			// TODO 兼容前端使用alert-app场景, 后续删除
-			if eventType == "alert-"+string(ck.APP_GROUP) ||
-				eventType == "alert-"+string(ck.CONTAINER_GROUP) ||
-				eventType == "alert-"+string(ck.INFRA_GROUP) ||
-				eventType == "alert-"+string(ck.NETWORK_GROUP) {
-				return true
-			}
 		}
 		return false
 	}
 
+	// 是否叠加alert-xxx类型告警事件
+	// app: app/mutation-app
+	// container: container/mutation-container
+	// infra: infra/mutation-infra
+	// network: network/mutation-network
+	// error: error
 	for _, eventType := range selectedEvents {
 		mutationType := mutationEventPrefix + eventType
 		if eventType == eventGroup ||
-			mutationType == eventGroup ||
-			eventType == alertEventPrefix+eventGroup {
+			mutationType == eventGroup {
 			return true
 		}
 	}
