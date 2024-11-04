@@ -52,7 +52,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 
 	for _, descendant := range descendants {
 		// 获取每个endpoint下的所有实例
-		instanceList, err := s.promRepo.GetInstanceList(req.StartTime, req.EndTime, descendant.Service, descendant.Endpoint)
+		instanceList, err := s.promRepo.GetActiveRequestInstanceList(req.StartTime, req.EndTime, descendant.Service, descendant.Endpoint)
 		if err != nil {
 			continue
 		}

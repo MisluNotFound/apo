@@ -31,6 +31,8 @@ type Repo interface {
 	GetInstanceList(startTime int64, endTime int64, serviceName string, url string) (*model.ServiceInstances, error)
 	// 查询活跃实例列表
 	GetActiveInstanceList(startTime int64, endTime int64, serviceName string) (*model.ServiceInstances, error)
+	// 查询在时间点过去一小时活跃过的实例
+	GetActiveRequestInstanceList(startTime int64, endTime int64, serviceName string, url string) (*model.ServiceInstances, error)
 	// 查询服务Endpoint列表，服务允许为空
 	GetServiceEndPointList(startTime int64, endTime int64, serviceName string) ([]string, error)
 	GetMultiServicesInstanceList(startTime int64, endTime int64, services []string) (map[string]*model.ServiceInstances, error)

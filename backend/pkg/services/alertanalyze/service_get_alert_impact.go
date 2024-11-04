@@ -371,7 +371,7 @@ func tryGetAlertServiceByNetSrcVM(repo prometheus.Repo, endpointsMap *EndpointsM
 
 	services, err := repo.GetServiceListByFilter(
 		startTime, endTime,
-		prometheus.NodePQLFilter, nodeName,
+		prometheus.NodeNamePQLFilter, nodeName,
 		prometheus.PidPQLFilter, pid,
 	)
 
@@ -427,7 +427,7 @@ func tryGetAlertServiceByInfraNode(repo prometheus.Repo, endpointsMap *Endpoints
 
 	services, err := repo.GetServiceListByFilter(
 		startTime, endTime,
-		prometheus.NodePQLFilter, nodeName,
+		prometheus.NodeNamePQLFilter, nodeName,
 	)
 
 	if err != nil {

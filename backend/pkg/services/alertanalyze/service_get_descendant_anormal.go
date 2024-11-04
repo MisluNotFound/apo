@@ -56,7 +56,7 @@ func (s *service) GetDescendantAnormal(req *request.GetDescendantAnormalEventReq
 		tmpServiceSet[node.Service] = struct{}{}
 
 		// 忽略URL查询Instance
-		instanceList, err := s.promRepo.GetInstanceList(req.StartTime, req.EndTime, node.Service, "")
+		instanceList, err := s.promRepo.GetActiveRequestInstanceList(req.StartTime, req.EndTime, node.Service, "")
 		if err != nil {
 			continue
 		}
