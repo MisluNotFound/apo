@@ -187,7 +187,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "API.alert"
+                    "API.alerts"
                 ],
                 "summary": "获取服务和根因类型的故障报告",
                 "parameters": [
@@ -522,6 +522,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/detect/mutation/exec-list": {
+            "get": {
+                "description": "获取异常检测执行记录",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取异常检测执行记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "当前页",
+                        "name": "currentPage",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetDefectDetectExecListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/detect/mutation/metrics": {
             "get": {
                 "description": "获取预定义检测表达式",
@@ -540,6 +583,49 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.GetPredefinedDetectExprResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/detect/mutation/rule-list": {
+            "get": {
+                "description": "获取异常检测规则",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "获取异常检测规则",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "当前页",
+                        "name": "currentPage",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页大小",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GetDefectDetectRuleListResponse"
                         }
                     },
                     "400": {
@@ -1032,7 +1118,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Api.config"
+                    "API.config"
                 ],
                 "summary": "配置单个表格的TTL",
                 "parameters": [
@@ -1066,7 +1152,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Api.config"
+                    "API.config"
                 ],
                 "summary": "配置TTL",
                 "parameters": [
@@ -4785,6 +4871,39 @@ const docTemplate = `{
                 }
             }
         },
+        "model.DetectMutation": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "description": "查询结束时间",
+                    "type": "integer"
+                },
+                "for": {
+                    "description": "突变告警等待时间",
+                    "type": "string"
+                },
+                "mutationCheckPQL": {
+                    "description": "需要执行故障检测的语句",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "告警名",
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "查询开始时间",
+                    "type": "integer"
+                },
+                "step": {
+                    "description": "查询步长(us)",
+                    "type": "integer"
+                },
+                "synchronizeToAlertRules": {
+                    "description": "是否同步到告警规则",
+                    "type": "boolean"
+                }
+            }
+        },
         "model.EndpointKey": {
             "type": "object",
             "properties": {
@@ -6278,6 +6397,34 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clickhouse.QueryTraceResult"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/model.Pagination"
+                }
+            }
+        },
+        "response.GetDefectDetectExecListResponse": {
+            "type": "object",
+            "properties": {
+                "mutatedRule": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.DetectMutation"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/model.Pagination"
+                }
+            }
+        },
+        "response.GetDefectDetectRuleListResponse": {
+            "type": "object",
+            "properties": {
+                "alertRule": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.AlertRule"
                     }
                 },
                 "pagination": {

@@ -560,6 +560,30 @@ definitions:
       name:
         type: string
     type: object
+  model.DetectMutation:
+    properties:
+      endTime:
+        description: 查询结束时间
+        type: integer
+      for:
+        description: 突变告警等待时间
+        type: string
+      mutationCheckPQL:
+        description: 需要执行故障检测的语句
+        type: string
+      name:
+        description: 告警名
+        type: string
+      startTime:
+        description: 查询开始时间
+        type: integer
+      step:
+        description: 查询步长(us)
+        type: integer
+      synchronizeToAlertRules:
+        description: 是否同步到告警规则
+        type: boolean
+    type: object
   model.EndpointKey:
     properties:
       endpoint:
@@ -1583,6 +1607,24 @@ definitions:
       pagination:
         $ref: '#/definitions/model.Pagination'
     type: object
+  response.GetDefectDetectExecListResponse:
+    properties:
+      mutatedRule:
+        items:
+          $ref: '#/definitions/model.DetectMutation'
+        type: array
+      pagination:
+        $ref: '#/definitions/model.Pagination'
+    type: object
+  response.GetDefectDetectRuleListResponse:
+    properties:
+      alertRule:
+        items:
+          $ref: '#/definitions/request.AlertRule'
+        type: array
+      pagination:
+        $ref: '#/definitions/model.Pagination'
+    type: object
   response.GetDescendantAlertContributationResponse:
     properties:
       contributationMap:
@@ -2527,7 +2569,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 获取服务和根因类型的故障报告
       tags:
-      - API.alert
+      - API.alerts
   /api/alerts/descendant/anormal/contribution:
     get:
       consumes:
@@ -2733,6 +2775,34 @@ paths:
       summary: 执行异常检测
       tags:
       - API.alerts
+  /api/alerts/detect/mutation/exec-list:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取异常检测执行记录
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 页大小
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetDefectDetectExecListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取异常检测执行记录
+      tags:
+      - API.alerts
   /api/alerts/detect/mutation/metrics:
     get:
       consumes:
@@ -2750,6 +2820,34 @@ paths:
           schema:
             $ref: '#/definitions/code.Failure'
       summary: 获取预定义检测表达式
+      tags:
+      - API.alerts
+  /api/alerts/detect/mutation/rule-list:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 获取异常检测规则
+      parameters:
+      - description: 当前页
+        in: query
+        name: currentPage
+        type: integer
+      - description: 页大小
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetDefectDetectRuleListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取异常检测规则
       tags:
       - API.alerts
   /api/alerts/event/impact:
@@ -3082,7 +3180,7 @@ paths:
           description: Bad Request
       summary: 配置单个表格的TTL
       tags:
-      - Api.config
+      - API.config
   /api/config/setTTL:
     post:
       consumes:
@@ -3104,7 +3202,7 @@ paths:
           description: Bad Request
       summary: 配置TTL
       tags:
-      - Api.config
+      - API.config
   /api/log/chart:
     post:
       consumes:

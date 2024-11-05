@@ -89,6 +89,7 @@ var enText = map[string]string{
 	AlertEventIDMissing:                          "Failed to get alert event impact, can not find event by id within the search time range.",
 	AlertAnalyzeDescendantAnormalEventDeltaError: "Failed to analyze descendant anormal event",
 	GetAnomalySpanError:                          "get anomaly span failed",
+	GetDetectMutationExecListError:               "Failed to get detect mutation exec list",
 
 	MutationPQLCheckFailed: "Failed to check mutation by PQL",
 

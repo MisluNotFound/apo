@@ -1,0 +1,36 @@
+package clickhouse
+
+import (
+	"context"
+	"github.com/CloudDetail/apo/backend/pkg/model"
+	"github.com/CloudDetail/apo/backend/pkg/model/request"
+)
+
+func (ch *chRepo) GetDetectExecList(req *request.GetDefectDetectExecListRequest) ([]model.DetectMutation, int64, error) {
+	sql := `SELECT * FROM detect_list LIMIT ? OFFSET ?`
+	resp := []model.DetectMutation{}
+	countSql := `SELECT count(*) as total FROM detect_list`
+	var count []QueryCount
+	err := ch.conn.Select(context.Background(), &count, countSql, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	err = ch.conn.Select(context.Background(), &resp, sql, req.PageSize, (req.CurrentPage-1)*req.PageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	return resp, int64(count[0].Total), nil
+}
+
+func (ch *chRepo) AddDetectMutation(mutation model.DetectMutation) error {
+	sql := `INSERT INTO detect_list(name, mutation_check_pql, for_duration, step, start_time, end_time, synchronize_to_alert_rules) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	batch, err := ch.conn.PrepareBatch(context.Background(), sql)
+	if err != nil {
+		return err
+	}
+	err = batch.Append(mutation.DetectName, mutation.MutationCheck, mutation.For, mutation.Step, mutation.StartTime, mutation.EndTime, mutation.SynchronizeToAlertRules)
+	if err != nil {
+		return err
+	}
+	return batch.Send()
+}

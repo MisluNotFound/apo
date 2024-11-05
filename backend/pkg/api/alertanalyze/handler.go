@@ -54,6 +54,16 @@ type Handler interface {
 	// @Tags API.alerts
 	// @Router /api/alerts/detect/mutation/add [post]
 	AddDefectsDetect() core.HandlerFunc
+
+	// GetDefectDetectExecList 获取异常检测执行记录
+	// @Tags API.alerts
+	// @Router /api/alerts/detect/mutation/exec-list [get]
+	GetDefectDetectExecList() core.HandlerFunc
+
+	// GetDefectDetectRuleList 获取异常检测规则
+	// @Tags API.alerts
+	// @Router /api/alerts/detect/mutation/rule-list [get]
+	GetDefectDetectRuleList() core.HandlerFunc
 }
 
 type handler struct {

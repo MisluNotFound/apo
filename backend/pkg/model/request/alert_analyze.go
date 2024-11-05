@@ -11,3 +11,11 @@ type AlertImpactRequest struct {
 
 	*PageParam // 告警分页参数
 }
+
+type GetDefectDetectExecListRequest struct {
+	*PageParam
+}
+
+type GetDefectDetectRuleListRequest struct {
+	*PageParam
+}

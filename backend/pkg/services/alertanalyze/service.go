@@ -39,6 +39,10 @@ type Service interface {
 
 	// 缺陷检测
 	DetectDefects(req *request.DetectMutationRequest) error
+
+	GetDefectDetectExecList(req *request.GetDefectDetectExecListRequest) (*response.GetDefectDetectExecListResponse, error)
+
+	GetDefectDetectRuleList(req *request.GetDefectDetectRuleListRequest) *response.GetDefectDetectRuleListResponse
 }
 
 type service struct {

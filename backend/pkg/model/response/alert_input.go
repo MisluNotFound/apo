@@ -77,3 +77,13 @@ type CheckAlertRuleResponse struct {
 type GetPredefinedDetectExprResponse struct {
 	PredefinedMetrics []model.PredefinedMetricExpr `json:"metrics"`
 }
+
+type GetDefectDetectExecListResponse struct {
+	Pagination  model.Pagination       `json:"pagination"`
+	MutatedRule []model.DetectMutation `json:"mutatedRule"`
+}
+
+type GetDefectDetectRuleListResponse struct {
+	AlertRule  []*request.AlertRule `json:"alertRule"`
+	Pagination model.Pagination     `json:"pagination"`
+}

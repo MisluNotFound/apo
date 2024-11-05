@@ -79,3 +79,16 @@ func (p *DetectExprPart) String() string {
 
 	return rawMetric
 }
+
+// DetectMutation 执行的异常检测记录
+// 新增异常检测记录时存入
+type DetectMutation struct {
+	DetectName    string `json:"name" ch:"name"`                            // 告警名
+	MutationCheck string ` json:"mutationCheckPQL" ch:"mutation_check_pql"` // 需要执行故障检测的语句
+	For           string `json:"for" ch:"for_duration"`                     // 突变告警等待时间
+	StartTime     int64  `json:"startTime" ch:"start_time"`                 // 查询开始时间
+	EndTime       int64  `json:"endTime" ch:"end_time"`                     // 查询结束时间
+	Step          int64  `json:"step" ch:"step"`                            // 查询步长(us)
+
+	SynchronizeToAlertRules bool `ch:"synchronize_to_alert_rules" json:"synchronizeToAlertRules"` // 是否同步到告警规则
+}

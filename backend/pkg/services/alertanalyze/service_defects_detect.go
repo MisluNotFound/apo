@@ -18,12 +18,12 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 	endTime := time.UnixMicro(req.EndTime)
 	step := time.Duration(req.Step * int64(time.Microsecond))
 
-	if len(req.MutataionCheck.Group) == 0 {
-		req.MutataionCheck.Group = kubernetes.MutationCustomLabelVal
+	if len(req.MutationCheck.Group) == 0 {
+		req.MutationCheck.Group = kubernetes.MutationCustomLabelVal
 	}
 
 	// 准备告警事件所需的Detail模版
-	pql := req.MutataionCheck.String()
+	pql := req.MutationCheck.String()
 	upperLimit := req.UpperLimit.String()
 	lowerLimit := req.LowerLimit.String()
 	var summary string
@@ -38,7 +38,6 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 		UpperLimit: upperLimit,
 		LowerLimit: lowerLimit,
 	}
-
 	metricResults, err := s.promRepo.ExecutedMutationCheck(mutationPQLCheck, startTime, endTime, step)
 	if err != nil {
 		return err
@@ -60,7 +59,7 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 		mutationRanges := splitContinuePoint(points, forMicroSecond, req.Step)
 		for i := 0; i < len(mutationRanges); i++ {
 			alertEvents := transferMetricResult2AlertEvent(
-				req.DetectName, req.MutataionCheck.Group,
+				req.DetectName, req.MutationCheck.Group,
 				req.EndTime, req.Step,
 				forMicroSecond, summary,
 				metricResult.Metric,
@@ -76,14 +75,26 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 	if err != nil {
 		return err
 	}
-
+	detectMutation := model.DetectMutation{
+		DetectName:              req.DetectName,
+		Step:                    req.Step,
+		StartTime:               req.StartTime,
+		EndTime:                 req.EndTime,
+		For:                     req.For,
+		MutationCheck:           mutationPQLCheck.GetExecutedPQL(),
+		SynchronizeToAlertRules: req.SynchronizeToAlertRules,
+	}
+	err = s.chRepo.AddDetectMutation(detectMutation)
+	if err != nil {
+		return err
+	}
 	if req.SynchronizeToAlertRules {
-		group, find := kubernetes.GetLabel(req.MutataionCheck.Group)
+		group, find := kubernetes.GetLabel(req.MutationCheck.Group)
 		if !find {
 			group = kubernetes.MutationCustomLabelKey
 		}
 		err := s.k8sRepo.AddAlertRule("", request.AlertRule{
-			Group: req.MutataionCheck.Group,
+			Group: req.MutationCheck.Group,
 			Alert: req.DetectName,
 			Expr:  mutationPQLCheck.GetExecutedPQL(),
 			For:   req.For,

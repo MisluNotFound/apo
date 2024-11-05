@@ -11,7 +11,7 @@ import (
 // SetTTL 配置TTL
 // @Summary  配置TTL
 // @Description  配置TTL
-// @Tags Api.config
+// @Tags API.config
 // @Accept json
 // @Produce json
 // @Param Request body request.SetTTLRequest true "请求信息"

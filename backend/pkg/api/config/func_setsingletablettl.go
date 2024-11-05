@@ -11,7 +11,7 @@ import (
 // SetSingleTableTTL 配置单个表格的TTL
 // @Summary  配置单个表格的TTL
 // @Description  配置单个表格的TTL
-// @Tags Api.config
+// @Tags API.config
 // @Accept json
 // @Produce json
 // @Param Request body request.SetSingleTTLRequest true "请求信息"

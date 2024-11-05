@@ -98,6 +98,12 @@ type Repo interface {
 	// ========== k8s events ============
 	// SeverityNumber > 9 (warning)
 	GetK8sAlertEventsSample(startTime time.Time, endTime time.Time, instances []*model.ServiceInstance) ([]K8sEvents, error)
+
+	// detect mutation exec list
+	// GetDetectExecList 获取异常检测执行记录
+	GetDetectExecList(req *request.GetDefectDetectExecListRequest) ([]model.DetectMutation, int64, error)
+	// AddDetectMutation 新增异常检测执行记录
+	AddDetectMutation(mutation model.DetectMutation) error
 }
 
 type chRepo struct {

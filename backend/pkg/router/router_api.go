@@ -126,6 +126,8 @@ func setApiRouter(r *resource) {
 		alertApi.POST("/anomaly-span/list", alertanalyzeHandler.GetAnomalySpan())
 		alertApi.GET("/detect/mutation/metrics", alertanalyzeHandler.GetPredefinedDetectExpr())
 		alertApi.POST("/detect/mutation/add", alertanalyzeHandler.AddDefectsDetect())
+		alertApi.GET("/detect/mutation/exec-list", alertanalyzeHandler.GetDefectDetectExecList())
+		alertApi.GET("/detect/mutation/rule-list", alertanalyzeHandler.GetDefectDetectRuleList())
 	}
 
 	configApi := r.mux.Group("/api/config")
