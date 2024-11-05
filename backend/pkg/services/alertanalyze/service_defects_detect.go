@@ -82,6 +82,7 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 		EndTime:                 req.EndTime,
 		For:                     req.For,
 		MutationCheck:           mutationPQLCheck.GetExecutedPQL(),
+		Timestamp:               time.Now().UnixMicro(),
 		SynchronizeToAlertRules: req.SynchronizeToAlertRules,
 	}
 	err = s.chRepo.AddDetectMutation(detectMutation)

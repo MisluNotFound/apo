@@ -4,10 +4,20 @@ import (
 	"context"
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
+	"time"
 )
 
 func (ch *chRepo) GetDetectExecList(req *request.GetDefectDetectExecListRequest) ([]model.DetectMutation, int64, error) {
-	sql := `SELECT * FROM detect_list LIMIT ? OFFSET ?`
+	sql := `SELECT 
+    		name,
+    		mutation_check_pql,
+    		for_duration,
+    		step,
+    		toUnixTimestamp64Micro(start_time) AS start_time,
+    		toUnixTimestamp64Micro(end_time) AS end_time,
+    		synchronize_to_alert_rules,
+    		toUnixTimestamp64Micro(timestamp) AS timestamp
+			FROM detect_list LIMIT ? OFFSET ?`
 	resp := []model.DetectMutation{}
 	countSql := `SELECT count(*) as total FROM detect_list`
 	var count []QueryCount
@@ -23,12 +33,28 @@ func (ch *chRepo) GetDetectExecList(req *request.GetDefectDetectExecListRequest)
 }
 
 func (ch *chRepo) AddDetectMutation(mutation model.DetectMutation) error {
-	sql := `INSERT INTO detect_list(name, mutation_check_pql, for_duration, step, start_time, end_time, synchronize_to_alert_rules) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	sql := `
+		INSERT INTO 
+		detect_list(
+		            name, 
+		            mutation_check_pql, 
+		            for_duration, step, 
+		            start_time, end_time, 
+		            synchronize_to_alert_rules,
+		            timestamp)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 	batch, err := ch.conn.PrepareBatch(context.Background(), sql)
 	if err != nil {
 		return err
 	}
-	err = batch.Append(mutation.DetectName, mutation.MutationCheck, mutation.For, mutation.Step, mutation.StartTime, mutation.EndTime, mutation.SynchronizeToAlertRules)
+	err = batch.Append(
+		mutation.DetectName,
+		mutation.MutationCheck,
+		mutation.For, mutation.Step,
+		time.UnixMicro(mutation.StartTime),
+		time.UnixMicro(mutation.EndTime),
+		mutation.SynchronizeToAlertRules,
+		time.UnixMicro(mutation.Timestamp))
 	if err != nil {
 		return err
 	}
