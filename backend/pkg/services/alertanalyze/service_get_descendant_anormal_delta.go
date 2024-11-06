@@ -113,18 +113,18 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 	// anormalEventTimeGroup := make(map[int64][]model.AnormalEvent)
 	for _, event := range anormalEventList {
 		// status Before Firing
-		isFiringBefore := model.StatusResolved
+		statusBefore := model.StatusResolved
 		lastEventTSBefore := int64(-1)
 		lastEventTSAfter := int64(-1)
 		isFiringDurning := model.StatusResolved
-		isFiringAfter := model.StatusResolved
+		statusAfter := model.StatusResolved
 		deltaEventTS := []model.AnormalUpdateTS{}
 
 		// 填充Chart
 		for _, updateTS := range event.UpdateTSs {
 			// 统计用户时间片前的状态
 			if updateTS.Timestamp < req.DeltaStartTime {
-				isFiringBefore = updateTS.AnormalStatus
+				statusBefore = updateTS.AnormalStatus
 				lastEventTSBefore = updateTS.Timestamp
 			}
 			if updateTS.Timestamp >= req.DeltaStartTime &&
@@ -133,7 +133,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 				isFiringDurning = model.StatusFiring
 			}
 			if updateTS.Timestamp < req.DeltaEndTime {
-				isFiringAfter = updateTS.AnormalStatus
+				statusAfter = updateTS.AnormalStatus
 				lastEventTSAfter = updateTS.Timestamp
 				if updateTS.Timestamp > req.DeltaStartTime {
 					deltaEventTS = append(deltaEventTS, updateTS)
@@ -141,7 +141,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			}
 		}
 
-		if isFiringBefore == model.StatusFiring {
+		if statusBefore == model.StatusFiring {
 			for _, impactEndpoints := range event.ImpactEndpoints {
 				alertCounts, find := originAnormalCounts[impactEndpoints.EndpointKey]
 				if !find {
@@ -166,7 +166,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			}
 		}
 
-		if isFiringBefore == model.StatusFiring || isFiringDurning == model.StatusFiring {
+		if statusBefore == model.StatusFiring || isFiringDurning == model.StatusFiring {
 			for _, impactEndpoints := range event.ImpactEndpoints {
 				alertCounts, find := alertTriggeredCounts[impactEndpoints.EndpointKey]
 				if !find {
@@ -177,7 +177,7 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 			}
 		}
 
-		if isFiringAfter == model.StatusFiring {
+		if statusAfter == model.StatusFiring {
 			for _, impactEndpoints := range event.ImpactEndpoints {
 				alertCounts, find := finalAnormalCounts[impactEndpoints.EndpointKey]
 				if !find {
@@ -203,22 +203,24 @@ func (s *service) SearchAnormalDeltaByEntry(req *request.GetDescendantAnormalDel
 		}
 
 		if len(deltaEventTS) > 0 {
+			var hasStarted bool = false
+			if statusBefore == model.StatusFiring {
+				hasStarted = true
+			}
 			// 记录发生变化的事件 (create / update / resolved)
-			for _, impactEndpoint := range event.ImpactEndpoints {
-				var hasStarted bool
-				for _, ts := range deltaEventTS {
-					var anormalStatus string
-					if isFiringBefore == model.StatusFiring && ts.AnormalStatus == model.StatusFiring ||
-						hasStarted && isFiringBefore == model.StatusFiring && ts.AnormalStatus == model.StatusFiring {
-						anormalStatus = "updatedFiring"
-					} else if isFiringBefore == model.StatusResolved && ts.AnormalStatus == model.StatusFiring {
-						anormalStatus = "startFiring"
-						hasStarted = true
-					} else if isFiringBefore == model.StatusFiring && ts.AnormalStatus == model.StatusResolved ||
-						hasStarted && ts.AnormalStatus == model.StatusResolved {
-						anormalStatus = "resolved"
-					}
+			for _, ts := range deltaEventTS {
+				var anormalStatus string = "updatedFiring"
+				if hasStarted && ts.AnormalStatus == model.StatusFiring {
+					anormalStatus = "updatedFiring"
+				} else if !hasStarted && ts.AnormalStatus == model.StatusFiring {
+					anormalStatus = "startFiring"
+					hasStarted = true
+				} else if ts.AnormalStatus == model.StatusResolved {
+					anormalStatus = "resolved"
+					hasStarted = false
+				}
 
+				for _, impactEndpoint := range event.ImpactEndpoints {
 					deltaAnormalEvents = append(deltaAnormalEvents, response.DescendantAnormalEventRecord{
 						EndpointKey:   impactEndpoint.EndpointKey,
 						AlertKey:      impactEndpoint.GetEventKey(),
