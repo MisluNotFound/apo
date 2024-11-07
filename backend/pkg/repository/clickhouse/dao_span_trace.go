@@ -22,7 +22,7 @@ const (
 	SELECT count(1) as total FROM mutated_span
 	`
 
-	TEMPLATE_QUERY_MUTATED_SPAN_TRACE = "SELECT %s, %s FROM span_trace %s %s"
+	TEMPLATE_QUERY_MUTATED_SPAN_TRACE = "SELECT %s, %s , (duration_us > threshold_value) as is_mutated FROM span_trace %s %s"
 
 	SQL_GET_LABEL_FILTER_KEYS = `SELECT DISTINCT
     key, 'string' as data_type , 'labels' as parent_field
@@ -230,6 +230,7 @@ type QueryTraceResult struct {
 	Metrics map[string]uint64 `ch:"metrics" json:"metrics"`
 
 	MutatedValue uint64 `ch:"mutated_value" json:"mutatedValue"`
+	IsMutated    uint8  `ch:"is_mutated" json:"isMutated"` // 延时是否突变
 }
 
 func AppendToBuilder(builder *QueryBuilder, f *request.SpanTraceFilter) error {
@@ -508,6 +509,7 @@ func (ch *chRepo) GetAnomalyTrace(req *request.GetAnomalySpanRequest) ([]QueryTr
 	}
 
 	byLimitSql := NewByLimitBuilder().
+		OrderBy("is_mutated", false). // 优先展示突变的数据
 		OrderBy(orderSql, false).
 		Offset((req.CurrentPage - 1) * req.PageSize).
 		Limit(req.PageSize).String()
