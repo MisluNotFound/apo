@@ -37,6 +37,10 @@ func (h *handler) GetDescendantRelevance() core.HandlerFunc {
 			return
 		}
 
+		// HACK 设置withAlert的默认值
+		if len(req.WithAlert) == 0 {
+			req.WithAlert = "true"
+		}
 		res, err := h.serviceInfoService.GetDescendantRelevance(req)
 		if err != nil {
 			c.AbortWithError(core.Error(

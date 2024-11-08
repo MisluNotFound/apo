@@ -61,7 +61,7 @@ func (s *service) GetDescendantRelevance(req *request.GetDescendantRelevanceRequ
 	}
 
 	var resp []response.GetDescendantRelevanceResponse
-	if req.WithAlert {
+	if req.WithAlert == "true" {
 		resp = s.fillDescendantWithAlertStatus(services, endpoints, req, sortResult, sortType, resp)
 	} else {
 		for i := 0; i < len(sortResult); i++ {

@@ -78,7 +78,7 @@ type GetDescendantRelevanceRequest struct {
 	GetDescendantMetricsRequest
 
 	SortBy    string `form:"sortBy"` // latency, errorRate
-	WithAlert bool   `form:"withAlert"`
+	WithAlert string `form:"withAlert"`
 }
 
 type GetErrorInstanceRequest struct {
