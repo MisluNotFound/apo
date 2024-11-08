@@ -2,6 +2,8 @@ package alerts
 
 import (
 	"fmt"
+	"net/url"
+
 	"github.com/CloudDetail/apo/backend/pkg/code"
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/amconfig"
@@ -9,7 +11,6 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	uuid2 "github.com/google/uuid"
-	"net/url"
 )
 
 func (s *service) GetAMConfigReceivers(req *request.GetAlertManagerConfigReceverRequest) response.GetAlertManagerConfigReceiverResponse {

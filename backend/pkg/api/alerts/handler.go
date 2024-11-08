@@ -6,7 +6,6 @@ import (
 
 	"github.com/CloudDetail/apo/backend/pkg/core"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
-	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 	"github.com/CloudDetail/apo/backend/pkg/services/alerts"
@@ -100,7 +99,7 @@ type handler struct {
 func New(logger *zap.Logger, chRepo clickhouse.Repo, dbRepo database.Repo, k8sRepo kubernetes.Repo, promRepo prometheus.Repo) Handler {
 	return &handler{
 		logger:                 logger,
-		alertService:           alerts.New(chRepo, promRepo, k8sRepo),
+		alertService:           alerts.New(chRepo, promRepo, k8sRepo, dbRepo),
 		serviceoverviewService: serviceoverview.New(chRepo, dbRepo, promRepo),
 	}
 }

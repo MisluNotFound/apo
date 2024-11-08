@@ -4,6 +4,7 @@ import (
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
 	"github.com/CloudDetail/apo/backend/pkg/repository/clickhouse"
+	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	"github.com/CloudDetail/apo/backend/pkg/repository/kubernetes"
 	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
 )
@@ -44,12 +45,14 @@ type service struct {
 	chRepo   clickhouse.Repo
 	promRepo prometheus.Repo
 	k8sApi   kubernetes.Repo
+	dbRepo   database.Repo
 }
 
-func New(chRepo clickhouse.Repo, promRepo prometheus.Repo, k8sApi kubernetes.Repo) Service {
+func New(chRepo clickhouse.Repo, promRepo prometheus.Repo, k8sApi kubernetes.Repo, dbRepo database.Repo) Service {
 	return &service{
 		chRepo:   chRepo,
 		promRepo: promRepo,
 		k8sApi:   k8sApi,
+		dbRepo:   dbRepo,
 	}
 }

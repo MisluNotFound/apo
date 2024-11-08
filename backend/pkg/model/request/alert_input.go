@@ -5,7 +5,7 @@ import (
 
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/amconfig"
-	"github.com/prometheus/common/model"
+	pmodel "github.com/prometheus/common/model"
 )
 
 type InputAlertManagerRequest struct {
@@ -24,7 +24,7 @@ type Alerts []Alert
 func (as Alerts) Firing() []Alert {
 	res := []Alert{}
 	for _, a := range as {
-		if a.Status == string(model.AlertFiring) {
+		if a.Status == string(pmodel.AlertFiring) {
 			res = append(res, a)
 		}
 	}
@@ -35,7 +35,7 @@ func (as Alerts) Firing() []Alert {
 func (as Alerts) Resolved() []Alert {
 	res := []Alert{}
 	for _, a := range as {
-		if a.Status == string(model.AlertResolved) {
+		if a.Status == string(pmodel.AlertResolved) {
 			res = append(res, a)
 		}
 	}
@@ -52,7 +52,7 @@ func (kv KV) SortedPairs() Pairs {
 		sortStart = 0
 	)
 	for k := range kv {
-		if k == string(model.AlertNameLabel) {
+		if k == string(pmodel.AlertNameLabel) {
 			keys = append([]string{k}, keys...)
 			sortStart = 1
 		} else {
