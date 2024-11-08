@@ -2622,6 +2622,12 @@ const docTemplate = `{
                         "description": "入口Endpoint",
                         "name": "entryEndpoint",
                         "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否跳过无故障传播链的记录",
+                        "name": "ignoreEmptyPropationsInstance",
+                        "in": "query"
                     }
                 ],
                 "responses": {

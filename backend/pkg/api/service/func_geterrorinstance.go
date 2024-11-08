@@ -21,6 +21,7 @@ import (
 // @Param step query int64 true "查询步长(us)"
 // @Param entryService query string false "入口服务名"
 // @Param entryEndpoint query string false "入口Endpoint"
+// @Param ignoreEmptyPropationsInstance query bool false "是否跳过无故障传播链的记录"
 // @Success 200 {object} response.GetErrorInstanceResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/service/error/instance [get]

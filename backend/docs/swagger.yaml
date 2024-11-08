@@ -4234,6 +4234,10 @@ paths:
         in: query
         name: entryEndpoint
         type: string
+      - description: 是否跳过无故障传播链的记录
+        in: query
+        name: ignoreEmptyPropationsInstance
+        type: boolean
       produces:
       - application/json
       responses:
