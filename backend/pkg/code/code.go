@@ -62,6 +62,8 @@ const (
 	GetTracePageListError    = "B0501"
 	GetTraceFiltersError     = "B0502"
 	GetTraceFilterValueError = "B0503"
+	GetOnOffCPUError         = "B0504"
+	GetSingleTraceError      = "B0505"
 
 	SetTTLError            = "B0601"
 	GetTTLError            = "B0602"
@@ -118,6 +120,9 @@ const (
 	GetDetectMutationExecListError               = "B0738"
 
 	GetMonitorStatusError = "B0801"
+
+	// k8s api
+	K8sGetResourceError = "B1001"
 )
 
 func Text(code string) string {

@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"github.com/CloudDetail/apo/backend/pkg/repository/jaeger"
 
 	"go.uber.org/zap"
 
@@ -16,15 +17,16 @@ import (
 )
 
 type resource struct {
-	mux         *core.Mux
-	logger      *zap.Logger
-	ch          clickhouse.Repo
-	prom        prometheus.Repo
-	pol         polarisanalyzer.Repo
-	internal_db internal_database.Repo
-	pkg_db      pkg_database.Repo
-
-	k8sApi kubernetes.Repo
+	mux                *core.Mux
+	logger             *zap.Logger
+	ch                 clickhouse.Repo
+	deepflowClickhouse clickhouse.Repo
+	prom               prometheus.Repo
+	pol                polarisanalyzer.Repo
+	internal_db        internal_database.Repo
+	pkg_db             pkg_database.Repo
+	jaegerRepo         jaeger.JaegerRepo
+	k8sRepo            kubernetes.Repo
 }
 
 type Server struct {
@@ -66,6 +68,19 @@ func NewHTTPServer(logger *zap.Logger) (*Server, error) {
 	}
 	r.ch = chRepo
 
+	deepflowCfg := config.Get().DeepFlow
+	// 没有配置时，默认采用 apo 的 ClickHouse
+	if deepflowCfg.ChAddress == "" {
+		r.deepflowClickhouse = chRepo
+	} else {
+		deepflowChRepo, err := clickhouse.New(logger, []string{deepflowCfg.ChAddress},
+			"default", deepflowCfg.ChUsername, deepflowCfg.ChPassword)
+		if err != nil {
+			logger.Fatal("new deepflow clickhouse err", zap.Error(err))
+		}
+		r.deepflowClickhouse = deepflowChRepo
+	}
+
 	// 初始化 Prometheus
 	promCfg := config.Get().Promethues
 	promRepo, err := prometheus.New(logger, promCfg.Address, promCfg.Storage)
@@ -88,7 +103,10 @@ func NewHTTPServer(logger *zap.Logger) (*Server, error) {
 	if err != nil {
 		logger.Fatal("new kubernetes api err", zap.Error(err))
 	}
-	r.k8sApi = k8sApi
+	r.k8sRepo = k8sApi
+
+	jaegerRepo, err := jaeger.New()
+	r.jaegerRepo = jaegerRepo
 
 	// 设置 API 路由
 	setApiRouter(r)
