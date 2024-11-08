@@ -122,7 +122,7 @@ func setApiRouter(r *resource) {
 		alertApi.POST("/alertmanager/receiver", alertHandler.UpdateAlertManagerConfigReceiver())
 		alertApi.DELETE("/alertmanager/receiver", alertHandler.DeleteAlertManagerConfigReceiver())
 
-		alertanalyzeHandler := alertanalyze.New(r.logger, r.ch, r.pkg_db, r.prom, r.pol, r.k8sApi)
+		alertanalyzeHandler := alertanalyze.New(r.logger, r.ch, r.pkg_db, r.prom, r.pol, r.k8sRepo)
 		alertApi.GET("/event/impact", alertanalyzeHandler.GetAlertImpact())
 		alertApi.GET("/descendant/anormal/contribution", alertanalyzeHandler.GetDescendantContribution())
 		alertApi.GET("/descendant/anormal/list", alertanalyzeHandler.GetDescendantAnormal())
