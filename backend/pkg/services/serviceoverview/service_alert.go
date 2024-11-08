@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/CloudDetail/apo/backend/pkg/repository/prometheus"
+
 	"github.com/CloudDetail/apo/backend/pkg/model"
 	"github.com/CloudDetail/apo/backend/pkg/model/request"
 	"github.com/CloudDetail/apo/backend/pkg/model/response"
@@ -22,25 +24,23 @@ func contains(arr []string, str string) bool {
 }
 
 func (s *service) GetServicesAlert(startTime time.Time, endTime time.Time, step time.Duration, serviceNames []string, returnData []string) (res []response.ServiceAlertRes, err error) {
-	var Services []ServiceDetail
-	for i := 0; i < len(serviceNames); i++ {
-		Services = append(Services, ServiceDetail{
-			ServiceName: serviceNames[i],
-		})
-	}
-	instances, err := s.promRepo.GetMultiServicesInstanceList(startTime.UnixMicro(), endTime.UnixMicro(), serviceNames)
+	svcInstances, err := s.promRepo.GetMultiServicesInstanceList(startTime.UnixMicro(), endTime.UnixMicro(), serviceNames)
 	if err != nil {
 		return nil, err
 	}
-	for i, svc := range serviceNames {
-		serviceInstances := instances[svc]
-		for _, instance := range serviceInstances.GetInstances() {
+	var services []ServiceDetail
+	for svc, instances := range svcInstances {
+		svcDetail := ServiceDetail{
+			ServiceName: svc,
+			Instances:   make([]Instance, 0),
+		}
+		for _, instance := range instances.GetInstances() {
 			var convertName string
 			var instanceType int
-			if instance.PodName != "" {
+			if len(instance.PodName) > 0 {
 				convertName = instance.PodName
 				instanceType = POD
-			} else if instance.ContainerId != "" {
+			} else if len(instance.ContainerId) > 0 {
 				convertName = instance.ContainerId
 				instanceType = CONTAINER
 			} else {
@@ -57,55 +57,55 @@ func (s *service) GetServicesAlert(startTime time.Time, endTime time.Time, step 
 				Namespace:    instance.Namespace,
 				Pid:          strconv.FormatInt(instance.Pid, 10),
 			}
-			Services[i].Instances = append(Services[i].Instances, newInstance)
+			svcDetail.Instances = append(svcDetail.Instances, newInstance)
 		}
+		services = append(services, svcDetail)
 	}
 
 	if returnData == nil || contains(returnData, "logMetrics") {
 		var duration string
 		var stepNS = endTime.Sub(startTime).Nanoseconds()
 		duration = strconv.FormatInt(stepNS/int64(time.Minute), 10) + "m"
-		for i := range Services {
+		for i := range services {
 			var Pods []string
-			for j := range Services[i].Instances {
-				if Services[i].Instances[j].InstanceType == POD {
-					Pods = append(Pods, Services[i].Instances[j].ConvertName)
+			for j := range services[i].Instances {
+				if services[i].Instances[j].InstanceType == POD {
+					Pods = append(Pods, services[i].Instances[j].ConvertName)
 				}
 			}
-			_, err = s.AvgLogByPod(&Services[i].Instances, Pods, endTime, duration)
-			_, err = s.LogDODByPod(&Services[i].Instances, Pods, endTime, duration)
-			_, err = s.LogWOWByPod(&Services[i].Instances, Pods, endTime, duration)
-			_, err = s.ServiceLogRangeDataByPod(&Services[i], Pods, startTime, endTime, duration, step)
+			_, err = s.AvgLogByPod(&services[i].Instances, Pods, endTime, duration)
+			_, err = s.LogDODByPod(&services[i].Instances, Pods, endTime, duration)
+			_, err = s.LogWOWByPod(&services[i].Instances, Pods, endTime, duration)
+			_, err = s.ServiceLogRangeDataByPod(&services[i], Pods, startTime, endTime, duration, step)
 		}
-		for i := range Services {
+		for i := range services {
 			var ContainerIds []string
-			for j := range Services[i].Instances {
-				if Services[i].Instances[j].InstanceType == CONTAINER {
-					ContainerIds = append(ContainerIds, Services[i].Instances[j].ConvertName)
+			for j := range services[i].Instances {
+				if services[i].Instances[j].InstanceType == CONTAINER {
+					ContainerIds = append(ContainerIds, services[i].Instances[j].ConvertName)
 				}
 			}
-			_, err = s.AvgLogByContainerId(&Services[i].Instances, ContainerIds, endTime, duration)
-			_, err = s.LogDODByContainerId(&Services[i].Instances, ContainerIds, endTime, duration)
-			_, err = s.LogWOWByContainerId(&Services[i].Instances, ContainerIds, endTime, duration)
-			_, err = s.ServiceLogRangeDataByContainerId(&Services[i], ContainerIds, startTime, endTime, duration, step)
+			_, err = s.AvgLogByContainerId(&services[i].Instances, ContainerIds, endTime, duration)
+			_, err = s.LogDODByContainerId(&services[i].Instances, ContainerIds, endTime, duration)
+			_, err = s.LogWOWByContainerId(&services[i].Instances, ContainerIds, endTime, duration)
+			_, err = s.ServiceLogRangeDataByContainerId(&services[i], ContainerIds, startTime, endTime, duration, step)
 		}
-		for i := range Services {
+		for i := range services {
 			var Pids []string
-			for j := range Services[i].Instances {
-				if Services[i].Instances[j].InstanceType == VM {
-					Pids = append(Pids, Services[i].Instances[j].ConvertName)
+			for j := range services[i].Instances {
+				if services[i].Instances[j].InstanceType == VM {
+					Pids = append(Pids, services[i].Instances[j].ConvertName)
 				}
 			}
-			_, err = s.AvgLogByPid(&Services[i].Instances, Pids, endTime, duration)
-			_, err = s.LogDODByPid(&Services[i].Instances, Pids, endTime, duration)
-			_, err = s.LogWOWByPid(&Services[i].Instances, Pids, endTime, duration)
-			_, err = s.ServiceLogRangeDataByPid(&Services[i], Pids, startTime, endTime, duration, step)
-
+			_, err = s.AvgLogByPid(&services[i].Instances, Pids, endTime, duration)
+			_, err = s.LogDODByPid(&services[i].Instances, Pids, endTime, duration)
+			_, err = s.LogWOWByPid(&services[i].Instances, Pids, endTime, duration)
+			_, err = s.ServiceLogRangeDataByPid(&services[i], Pids, startTime, endTime, duration, step)
 		}
 	}
 
 	var servicesAlertResMsg []response.ServiceAlertRes
-	for _, service := range Services {
+	for _, service := range services {
 		if service.ServiceName == "" {
 			continue
 		}
@@ -122,8 +122,7 @@ func (s *service) GetServicesAlert(startTime time.Time, endTime time.Time, step 
 				data[timestamp] = value
 			}
 			newlogs.ChartData = data
-		}
-		if service.LogData == nil {
+		} else {
 			values := make(map[int64]float64)
 			for ts := startTime.UnixMicro(); ts <= endTime.UnixMicro(); ts += step.Microseconds() {
 				values[ts] = 0
@@ -131,19 +130,12 @@ func (s *service) GetServicesAlert(startTime time.Time, endTime time.Time, step 
 			newlogs.ChartData = values
 		}
 		for _, instance := range service.Instances {
+			calculateRate(&instance)
 			if instance.LogDayOverDay != nil {
-				if newlogs.Ratio.DayOverDay == nil {
-					// 如果 newlogs.Ratio.DayOverDay 是 nil，需要先初始化
-					newlogs.Ratio.DayOverDay = new(float64)
-				}
-				*newlogs.Ratio.DayOverDay += *instance.LogDayOverDay
+				newlogs.Ratio.DayOverDay = instance.LogDayOverDay
 			}
 			if instance.LogWeekOverWeek != nil {
-				if newlogs.Ratio.WeekOverDay == nil {
-					// 如果 newlogs.Ratio.WeekOverDay 是 nil，需要先初始化
-					newlogs.Ratio.WeekOverDay = new(float64)
-				}
-				*newlogs.Ratio.WeekOverDay += *instance.LogWeekOverWeek
+				newlogs.Ratio.WeekOverDay = instance.LogWeekOverWeek
 			}
 			if instance.AvgLog != nil {
 				if newlogs.Value == nil {
@@ -334,4 +326,65 @@ func getLatestStartTime(startTSmap map[model.ServiceInstance]int64) int64 {
 		}
 	}
 	return latestStartTime
+}
+
+// getNormalLog 查询service下所有实例是否有正常log指标
+func (s *service) getNormalLog(service ServiceDetail, startTime, endTime time.Time) []prometheus.MetricResult {
+	startTS, endTS := startTime.UnixMicro(), endTime.UnixMicro()
+	var pods, pids, nodeNames []string
+	for _, instance := range service.Instances {
+		if len(instance.Pod) > 0 {
+			pods = append(pods, instance.Pod)
+		} else if len(instance.Pid) > 0 && len(instance.NodeName) > 0 {
+			pids = append(pids, instance.NodeName)
+			nodeNames = append(nodeNames, instance.NodeName)
+		}
+	}
+
+	podFilter := make([]string, 2)
+	podFilter[0] = prometheus.LogMetricPodRegexPQLFilter
+	podFilter[1] = prometheus.RegexMultipleValue(pods...)
+	vmFilter := make([]string, 4)
+	vmFilter[0] = prometheus.LogMetricNodeRegexPQLFilter
+	vmFilter[1] = prometheus.RegexMultipleValue(nodeNames...)
+	vmFilter[2] = prometheus.LogMetricPidRegexPQLFilter
+	vmFilter[3] = prometheus.RegexMultipleValue(pids...)
+	pql, err := prometheus.PQLInstanceLog(
+		prometheus.PQLNormalLogCountWithFilters,
+		startTS, endTS,
+		prometheus.LogGranularity,
+		podFilter, vmFilter)
+	if err != nil {
+		return nil
+	}
+	normalLog, _ := s.promRepo.QueryData(endTime, pql)
+	return normalLog
+}
+
+// calculateRate 计算instance的同比
+func calculateRate(instance *Instance) {
+	if instance.LogNow == nil {
+		return
+	}
+
+	maxVal := new(float64)
+	*maxVal = prometheus.RES_MAX_VALUE
+	if instance.LogYesterday == nil && *instance.LogNow > 0 {
+		instance.LogDayOverDay = maxVal
+	} else if instance.LogYesterday != nil {
+		var dod float64 = 0
+		if *instance.LogYesterday != 0 {
+			dod = (*instance.LogNow / *instance.LogYesterday - 1) * 100
+		}
+		instance.LogDayOverDay = &dod
+	}
+	if instance.LogLastWeek == nil && *instance.LogNow > 0 {
+		instance.LogDayOverDay = maxVal
+	} else if instance.LogLastWeek != nil {
+		var wow float64 = 0
+		if *instance.LogLastWeek != 0 {
+			wow = (*instance.LogNow / *instance.LogLastWeek - 1) * 100
+		}
+		instance.LogDayOverDay = &wow
+	}
 }

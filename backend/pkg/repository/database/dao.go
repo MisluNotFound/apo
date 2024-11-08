@@ -19,9 +19,15 @@ type Repo interface {
 	DeleteThreshold(serviceName string, endPoint string) error
 	OperateLogTableInfo(model *LogTableInfo, op Operator) error
 	GetAllLogTable() ([]LogTableInfo, error)
-	UpdateLogPaseRule(model *LogTableInfo) error
+	UpdateLogParseRule(model *LogTableInfo) error
 	GetAllOtherLogTable() ([]OtherLogTable, error)
 	OperatorOtherLogTable(model *OtherLogTable, op Operator) error
+	CreateDingTalkReceiver(dingTalkConfig *DingTalkConfig) error
+	// GetDingTalkReceiver 获取uuid对应的webhook url secret
+	GetDingTalkReceiver(uuid string) (DingTalkConfig, error)
+	GetDingTalkReceiverByAlertName(configFile string, alertName string, page, pageSize int) ([]*DingTalkConfig, int64, error)
+	UpdateDingTalkReceiver(dingTalkConfig *DingTalkConfig, oldName string) error
+	DeleteDingTalkReceiver(configFile, alertName string) error
 }
 
 type daoRepo struct {
@@ -68,12 +74,15 @@ func New(zapLogger *zap.Logger) (repo Repo, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	err = database.AutoMigrate(&LogTableInfo{})
 	if err != nil {
 		return nil, err
 	}
 	err = database.AutoMigrate(&OtherLogTable{})
+	if err != nil {
+		return nil, err
+	}
+	err = database.AutoMigrate(&DingTalkConfig{})
 	if err != nil {
 		return nil, err
 	}

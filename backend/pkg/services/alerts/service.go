@@ -15,6 +15,7 @@ type Service interface {
 
 	// InputAlertManager 接收 AlertManager 的告警事件
 	InputAlertManager(req *request.InputAlertManagerRequest) error
+	ForwardToDingTalk(req *request.ForwardToDingTalkRequest, uuid string) error
 
 	// GetAlertRuleFile 获取基础告警规则
 	GetAlertRuleFile(req *request.GetAlertRuleConfigRequest) (*response.GetAlertRuleFileResponse, error)

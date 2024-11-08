@@ -738,6 +738,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/alerts/outputs/dingtalk/{uuid}": {
+            "post": {
+                "description": "接收告警转发到钉钉",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.alerts"
+                ],
+                "summary": "接收告警转发到钉钉",
+                "parameters": [
+                    {
+                        "description": "请求信息",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ForwardToDingTalkRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "钉钉webhook对应的uuid",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/api/alerts/rule": {
             "post": {
                 "description": "更新告警规则",
@@ -4151,7 +4195,16 @@ const docTemplate = `{
         },
         "amconfig.Receiver": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
+                "dingTalkConfigs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/database.DingTalkConfig"
+                    }
+                },
                 "emailConfigs": {
                     "type": "array",
                     "items": {
@@ -4166,6 +4219,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/amconfig.WebhookConfig"
+                    }
+                },
+                "wechatConfigs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/amconfig.WechatConfig"
                     }
                 }
             }
@@ -4195,6 +4254,44 @@ const docTemplate = `{
                     ]
                 },
                 "urlFile": {
+                    "type": "string"
+                }
+            }
+        },
+        "amconfig.WechatConfig": {
+            "type": "object",
+            "properties": {
+                "agentId": {
+                    "type": "string"
+                },
+                "apiSecret": {
+                    "type": "string"
+                },
+                "apiUrl": {
+                    "$ref": "#/definitions/amconfig.URL"
+                },
+                "corpId": {
+                    "type": "string"
+                },
+                "httpConfig": {
+                    "$ref": "#/definitions/httpconfig.HTTPClientConfig"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "messageType": {
+                    "type": "string"
+                },
+                "sendResolved": {
+                    "type": "boolean"
+                },
+                "toParty": {
+                    "type": "string"
+                },
+                "toTag": {
+                    "type": "string"
+                },
+                "toUser": {
                     "type": "string"
                 }
             }
@@ -4486,6 +4583,17 @@ const docTemplate = `{
                 },
                 "message": {
                     "description": "错误信息",
+                    "type": "string"
+                }
+            }
+        },
+        "database.DingTalkConfig": {
+            "type": "object",
+            "properties": {
+                "secret": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -5077,6 +5185,10 @@ const docTemplate = `{
                 },
                 "oldName": {
                     "type": "string"
+                },
+                "type": {
+                    "description": "receiver类型",
+                    "type": "string"
                 }
             }
         },
@@ -5147,10 +5259,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "annotations": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/request.KV"
                 },
                 "endsAt": {
                     "type": "string"
@@ -5162,10 +5271,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/request.KV"
                 },
                 "startsAt": {
                     "type": "string"
@@ -5267,6 +5373,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -5382,6 +5491,38 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "request.ForwardToDingTalkRequest": {
+            "type": "object",
+            "properties": {
+                "ExternalURL": {
+                    "type": "string"
+                },
+                "alerts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.Alert"
+                    }
+                },
+                "commonAnnotations": {
+                    "$ref": "#/definitions/request.KV"
+                },
+                "commonLabels": {
+                    "$ref": "#/definitions/request.KV"
+                },
+                "groupLabels": {
+                    "$ref": "#/definitions/request.KV"
+                },
+                "receiver": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "truncatedAlerts": {
+                    "type": "integer"
                 }
             }
         },
@@ -5700,6 +5841,9 @@ const docTemplate = `{
         "request.InputAlertManagerRequest": {
             "type": "object",
             "properties": {
+                "ExternalURL": {
+                    "type": "string"
+                },
                 "alerts": {
                     "type": "array",
                     "items": {
@@ -5707,22 +5851,13 @@ const docTemplate = `{
                     }
                 },
                 "commonAnnotations": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/request.KV"
                 },
                 "commonLabels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/request.KV"
                 },
                 "groupLabels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "$ref": "#/definitions/request.KV"
                 },
                 "receiver": {
                     "type": "string"
@@ -5733,6 +5868,12 @@ const docTemplate = `{
                 "truncatedAlerts": {
                     "type": "integer"
                 }
+            }
+        },
+        "request.KV": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "string"
             }
         },
         "request.LogIndexRequest": {
@@ -5985,6 +6126,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/amconfig.Receiver"
                 },
                 "oldName": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "receiver类型",
                     "type": "string"
                 }
             }

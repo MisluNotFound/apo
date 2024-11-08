@@ -100,6 +100,7 @@ func setApiRouter(r *resource) {
 	{
 		alertHandler := alerts.New(r.logger, r.ch, r.pkg_db, r.k8sApi, r.prom)
 		alertApi.POST("/inputs/alertmanager", alertHandler.InputAlertManager())
+		alertApi.POST("/outputs/dingtalk/:uuid", alertHandler.ForwardToDingTalk())
 		alertApi.GET("/rules/file", alertHandler.GetAlertRuleFile())
 		alertApi.POST("/rules/file", alertHandler.UpdateAlertRuleFile())
 

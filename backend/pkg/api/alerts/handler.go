@@ -1,6 +1,7 @@
 package alerts
 
 import (
+	"github.com/CloudDetail/apo/backend/pkg/repository/database"
 	"go.uber.org/zap"
 
 	"github.com/CloudDetail/apo/backend/pkg/core"
@@ -19,6 +20,11 @@ type Handler interface {
 	// @Tags API.alerts
 	// @Router /api/alerts/inputs/alertmanager [post]
 	InputAlertManager() core.HandlerFunc
+
+	// ForwardToDingTalk 接收告警转发到钉钉
+	// @Tags API.alerts
+	// @Router /api/alerts/outputs/dingtalk/{uuid} [post]
+	ForwardToDingTalk() core.HandlerFunc
 
 	// GetAlertRuleFile 获取基础告警规则
 	// @Tags API.alerts
