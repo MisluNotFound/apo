@@ -81,7 +81,11 @@ type GetDescendantRelevanceRequest struct {
 	WithAlert bool   `form:"withAlert"`
 }
 
-type GetErrorInstanceRequest = GetDescendantMetricsRequest
+type GetErrorInstanceRequest struct {
+	GetDescendantMetricsRequest
+
+	IgnoreEmptyPropationsInstance bool `form:"ignoreEmptyPropationsInstance"`
+}
 
 type GetErrorInstanceLogsRequest struct {
 	StartTime   int64  `form:"startTime" binding:"min=0"`                    // 查询开始时间

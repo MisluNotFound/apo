@@ -114,8 +114,14 @@ func (s *service) GetErrorInstance(req *request.GetErrorInstanceRequest) (*respo
 	// 只显示有数据的实例列表
 	filteredInstanceList := make([]*response.ErrorInstance, 0)
 	for _, instance := range instanceList {
-		if exist_metrics(instance.Logs) || len(instance.Propations) > 0 {
-			filteredInstanceList = append(filteredInstanceList, instance)
+		if req.IgnoreEmptyPropationsInstance {
+			if len(instance.Propations) > 0 {
+				filteredInstanceList = append(filteredInstanceList, instance)
+			}
+		} else {
+			if exist_metrics(instance.Logs) || len(instance.Propations) > 0 {
+				filteredInstanceList = append(filteredInstanceList, instance)
+			}
 		}
 	}
 	return &response.GetErrorInstanceResponse{
