@@ -4481,6 +4481,10 @@ const docTemplate = `{
                 "isError": {
                     "type": "boolean"
                 },
+                "isMutated": {
+                    "description": "延时是否突变",
+                    "type": "integer"
+                },
                 "isSlow": {
                     "type": "boolean"
                 },
@@ -4495,6 +4499,9 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "integer"
                     }
+                },
+                "mutatedValue": {
+                    "type": "integer"
                 },
                 "reason": {
                     "type": "string"
@@ -5009,6 +5016,10 @@ const docTemplate = `{
                 "synchronizeToAlertRules": {
                     "description": "是否同步到告警规则",
                     "type": "boolean"
+                },
+                "timestamp": {
+                    "description": "执行时间",
+                    "type": "integer"
                 }
             }
         },
