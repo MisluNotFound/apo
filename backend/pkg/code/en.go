@@ -99,6 +99,7 @@ var enText = map[string]string{
 	AlertAnalyzeDescendantAnormalContribution: "Failed to analyze descendant anormal contribution",
 	DetectDefectsError:                        "Failed to detect defects",
 	DetectDefectsCreatAlertError:              "Failed to detect defects when create alert",
+	AddExecRecordError:                        "Failed to add exec record",
 
 	K8sGetResourceError: "Failed to get k8s resource",
 }

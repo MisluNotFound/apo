@@ -91,4 +91,5 @@ type DetectMutation struct {
 	Timestamp               int64  `json:"timestamp" ch:"timestamp"`                                // 执行时间
 	Step                    int64  `json:"step" ch:"step"`                                          // 查询步长(us)
 	SynchronizeToAlertRules bool   `ch:"synchronize_to_alert_rules" json:"synchronizeToAlertRules"` // 是否同步到告警规则
+	Group                   string `json:"group" ch:"group"`                                        // 告警组名
 }
