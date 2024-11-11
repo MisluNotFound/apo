@@ -16,8 +16,11 @@ func (ch *chRepo) GetDetectExecList(req *request.GetDefectDetectExecListRequest)
     		toUnixTimestamp64Micro(start_time) AS start_time,
     		toUnixTimestamp64Micro(end_time) AS end_time,
     		synchronize_to_alert_rules,
+    		group,
     		toUnixTimestamp64Micro(timestamp) AS timestamp
-			FROM detect_list LIMIT ? OFFSET ?`
+			FROM detect_list 
+			ORDER BY timestamp DESC 
+			LIMIT ? OFFSET ?`
 	resp := []model.DetectMutation{}
 	countSql := `SELECT count(*) as total FROM detect_list`
 	var count []QueryCount
@@ -41,22 +44,20 @@ func (ch *chRepo) AddDetectMutation(mutation model.DetectMutation) error {
 		            for_duration, step, 
 		            start_time, end_time, 
 		            synchronize_to_alert_rules,
-		            timestamp)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-	batch, err := ch.conn.PrepareBatch(context.Background(), sql)
-	if err != nil {
-		return err
-	}
-	err = batch.Append(
+		            timestamp,
+		            group)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+
+	err := ch.conn.Exec(context.Background(), sql,
 		mutation.DetectName,
 		mutation.MutationCheck,
 		mutation.For, mutation.Step,
 		time.UnixMicro(mutation.StartTime),
 		time.UnixMicro(mutation.EndTime),
 		mutation.SynchronizeToAlertRules,
-		time.UnixMicro(mutation.Timestamp))
-	if err != nil {
-		return err
-	}
-	return batch.Send()
+		time.UnixMicro(mutation.Timestamp),
+		mutation.Group,
+	)
+
+	return err
 }

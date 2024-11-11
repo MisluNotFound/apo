@@ -102,9 +102,9 @@ var zhCnText = map[string]string{
 
 	AlertAnalyzeDescendantAnormalEventError:   "获取下游异常事件失败",
 	AlertAnalyzeDescendantAnormalContribution: "获取下游异常事件贡献失败",
-
-	DetectDefectsError:           "异常分析失败",
-	DetectDefectsCreatAlertError: "创建异常告警失败",
+	DetectDefectsError:                        "异常分析失败",
+	DetectDefectsCreatAlertError:              "创建异常告警失败",
+	AddExecRecordError:                        "添加执行记录失败",
 
 	K8sGetResourceError: "获取k8s资源失败",
 }

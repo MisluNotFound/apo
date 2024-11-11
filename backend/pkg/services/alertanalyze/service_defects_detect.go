@@ -2,6 +2,7 @@ package alertanalyze
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -38,6 +39,36 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 		UpperLimit: upperLimit,
 		LowerLimit: lowerLimit,
 	}
+
+	if req.SynchronizeToAlertRules {
+		group, find := kubernetes.GetLabel(req.MutationCheck.Group)
+		if !find {
+			group = kubernetes.MutationCustomLabelKey
+		}
+		err := s.k8sRepo.AddAlertRule("", request.AlertRule{
+			Group: req.MutationCheck.Group,
+			Alert: req.DetectName,
+			Expr:  mutationPQLCheck.GetExecutedPQL(),
+			For:   req.For,
+			Labels: map[string]string{
+				"severity": "warning",
+				"group":    group,
+			},
+			Annotations: map[string]string{
+				"description": req.DetectName + " 检测到异常\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+				"summary":     summary,
+			},
+		})
+
+		if err != nil {
+			// 创建告警规则失败
+			return model.ErrWithMessage{
+				Err:  err,
+				Code: code.DetectDefectsCreatAlertError,
+			}
+		}
+	}
+
 	metricResults, err := s.promRepo.ExecutedMutationCheck(mutationPQLCheck, startTime, endTime, step)
 	if err != nil {
 		return err
@@ -75,6 +106,7 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 	if err != nil {
 		return err
 	}
+
 	detectMutation := model.DetectMutation{
 		DetectName:              req.DetectName,
 		Step:                    req.Step,
@@ -84,40 +116,11 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 		MutationCheck:           mutationPQLCheck.GetExecutedPQL(),
 		Timestamp:               time.Now().UnixMicro(),
 		SynchronizeToAlertRules: req.SynchronizeToAlertRules,
+		Group:                   req.MutationCheck.Group,
 	}
-	err = s.chRepo.AddDetectMutation(detectMutation)
-	if err != nil {
-		return err
+	if err = s.chRepo.AddDetectMutation(detectMutation); err != nil {
+		return model.NewErrWithMessage(errors.New("failed to add record"), code.AddExecRecordError)
 	}
-	if req.SynchronizeToAlertRules {
-		group, find := kubernetes.GetLabel(req.MutationCheck.Group)
-		if !find {
-			group = kubernetes.MutationCustomLabelKey
-		}
-		err := s.k8sRepo.AddAlertRule("", request.AlertRule{
-			Group: req.MutationCheck.Group,
-			Alert: req.DetectName,
-			Expr:  mutationPQLCheck.GetExecutedPQL(),
-			For:   req.For,
-			Labels: map[string]string{
-				"severity": "warning",
-				"group":    group,
-			},
-			Annotations: map[string]string{
-				"description": req.DetectName + " 检测到异常\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
-				"summary":     summary,
-			},
-		})
-
-		if err != nil {
-			// 创建告警规则失败
-			return model.ErrWithMessage{
-				Err:  err,
-				Code: code.DetectDefectsCreatAlertError,
-			}
-		}
-	}
-
 	return nil
 }
 
