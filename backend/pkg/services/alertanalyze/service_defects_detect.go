@@ -1,7 +1,9 @@
 package alertanalyze
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -315,11 +317,19 @@ func extractTagsFromLabels(name, alertGroup, group string, labels prometheus.Lab
 }
 
 func extractDetailTemplate(name string, tags map[string]string, summary string) string {
-	tagsStr := fmt.Sprintf("%v", tags)
-	return `{"description":"` + name + ` 检测到异常\n  VALUE = %f\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
+	tagsStr, err := json.Marshal(tags)
+	if err != nil {
+		tagsStr = []byte("tags marshal error")
+	}
+	var summaryStr bytes.Buffer
+	json.HTMLEscape(&summaryStr, []byte(summary))
+	return `{"description":"` + name + ` 检测到异常\n  VALUE = %f\n  LABELS = ` + string(tagsStr) + `","summary":"` + summaryStr.String() + `"}`
 }
 
 func extractResolvedDetail(name string, tags map[string]string, summary string) string {
-	tagsStr := fmt.Sprintf("%v", tags)
-	return `{"description":"` + name + ` 检测到异常\n  LABELS = ` + tagsStr + `","summary":"` + summary + `"}`
+	tagsStr, err := json.Marshal(tags)
+	if err != nil {
+		tagsStr = []byte("tags marshal error")
+	}
+	return `{"description":"` + name + ` 检测到异常\n  LABELS = ` + string(tagsStr) + `","summary":"` + summary + `"}`
 }
