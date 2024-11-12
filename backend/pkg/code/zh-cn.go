@@ -97,6 +97,7 @@ var zhCnText = map[string]string{
 	AlertAnalyzeDescendantAnormalEventDeltaError: "分析告警事件失败: 查询下游异常事件失败",
 	GetAnomalySpanError:                          "获取故障报告失败",
 	GetDetectMutationExecListError:               "获取异常检测执行记录失败",
+	GetDetectMutationRuleListError:               "获取取异常检测规则失败",
 
 	MutationPQLCheckFailed: "通过PQL检查指标突变失败",
 

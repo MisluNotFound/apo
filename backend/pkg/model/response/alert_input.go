@@ -84,6 +84,6 @@ type GetDefectDetectExecListResponse struct {
 }
 
 type GetDefectDetectRuleListResponse struct {
-	AlertRule  []*request.AlertRule `json:"alertRule"`
-	Pagination model.Pagination     `json:"pagination"`
+	AlertRule  []model.DetectMutation `json:"alertRule"`
+	Pagination model.Pagination       `json:"pagination"`
 }

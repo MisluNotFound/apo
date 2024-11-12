@@ -119,6 +119,7 @@ const (
 	DetectDefectsCreatAlertError                 = "B0737"
 	GetDetectMutationExecListError               = "B0738"
 	AddExecRecordError                           = "B0739"
+	GetDetectMutationRuleListError               = "B0740"
 
 	GetMonitorStatusError = "B0801"
 

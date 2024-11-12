@@ -34,7 +34,14 @@ func (h *handler) GetDefectDetectRuleList() core.HandlerFunc {
 			req.PageSize = 10
 			req.CurrentPage = 1
 		}
-		resp := h.alertanalyzeService.GetDefectDetectRuleList(req)
+		resp, err := h.alertanalyzeService.GetDefectDetectRuleList(req)
+		if err != nil {
+			c.AbortWithError(core.Error(
+				http.StatusBadRequest,
+				code.GetDetectMutationRuleListError,
+				code.Text(code.GetDetectMutationRuleListError)).WithError(err))
+			return
+		}
 		c.Payload(resp)
 	}
 }

@@ -92,6 +92,7 @@ var enText = map[string]string{
 	AlertAnalyzeDescendantAnormalEventDeltaError: "Failed to analyze descendant anormal event",
 	GetAnomalySpanError:                          "get anomaly span failed",
 	GetDetectMutationExecListError:               "Failed to get detect mutation exec list",
+	GetDetectMutationRuleListError:               "Failed to get detect mutation rule list",
 
 	MutationPQLCheckFailed: "Failed to check mutation by PQL",
 

@@ -42,7 +42,7 @@ type Service interface {
 
 	GetDefectDetectExecList(req *request.GetDefectDetectExecListRequest) (*response.GetDefectDetectExecListResponse, error)
 
-	GetDefectDetectRuleList(req *request.GetDefectDetectRuleListRequest) *response.GetDefectDetectRuleListResponse
+	GetDefectDetectRuleList(req *request.GetDefectDetectRuleListRequest) (*response.GetDefectDetectRuleListResponse, error)
 }
 
 type service struct {

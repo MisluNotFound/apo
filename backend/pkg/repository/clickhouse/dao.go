@@ -111,6 +111,8 @@ type Repo interface {
 	GetDetectExecList(req *request.GetDefectDetectExecListRequest) ([]model.DetectMutation, int64, error)
 	// AddDetectMutation 新增异常检测执行记录
 	AddDetectMutation(mutation model.DetectMutation) error
+	// GetDistinctDetectExecList 获取异常检测规则
+	GetDistinctDetectExecList(req *request.GetDefectDetectRuleListRequest) ([]model.DetectMutation, int64, error)
 }
 
 type chRepo struct {

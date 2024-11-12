@@ -108,15 +108,14 @@ func (s *service) DetectDefects(req *request.DetectMutationRequest) error {
 	}
 
 	detectMutation := model.DetectMutation{
-		DetectName:              req.DetectName,
-		Step:                    req.Step,
-		StartTime:               req.StartTime,
-		EndTime:                 req.EndTime,
-		For:                     req.For,
-		MutationCheck:           mutationPQLCheck.GetExecutedPQL(),
-		Timestamp:               time.Now().UnixMicro(),
-		SynchronizeToAlertRules: req.SynchronizeToAlertRules,
-		Group:                   req.MutationCheck.Group,
+		DetectName:    req.DetectName,
+		Step:          req.Step,
+		StartTime:     req.StartTime,
+		EndTime:       req.EndTime,
+		For:           req.For,
+		MutationCheck: mutationPQLCheck.GetExecutedPQL(),
+		Timestamp:     time.Now().UnixMicro(),
+		Group:         req.MutationCheck.Group,
 	}
 	if err = s.chRepo.AddDetectMutation(detectMutation); err != nil {
 		return model.NewErrWithMessage(errors.New("failed to add record"), code.AddExecRecordError)
